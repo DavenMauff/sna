@@ -32,4 +32,14 @@ KNOK.cor
 
 plot(KNOK.cor, xlim=c(-0.25, 0.4))
 
+nl<-netlm(KNOKE.n,           # Dependent variable/network
+          KNOKI.n, # List the independent variables/networks
+          reps=10000)  
+summary(nl)
+
+nlog<-netlogit(KNOKE.n, KNOKI.n,reps=1000)
+summary(nlog)
+
+KNOK.a <- aov
+
 gcor(KNOKI, KNOKE)
