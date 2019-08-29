@@ -18,10 +18,18 @@ dimnames(KNOKE) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U
 
 KNOKI.n <- as.network(KNOKI)
 KNOKE.n <- as.network(KNOKE)
+KNOKI.n
+KNOKE.n
+
+summary(KNOKI.n)
+summary(KNOKE.n)
 
 network.density(KNOKI.n)
 network.density(KNOKE.n)
 
-KNOK.cor <- qaptest
+KNOK.cor <- qaptest(list(KNOKI, KNOKE), gcor, g1=1, g2=2, reps=2000)
+KNOK.cor
+
+plot(KNOK.cor, xlim=c(-0.25, 0.4))
 
 gcor(KNOKI, KNOKE)
