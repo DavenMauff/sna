@@ -1,8 +1,12 @@
+#Import the libraries needed to complete this tutorial
 library(statnet)
 library(resample)
 library(snowboot)
 library(igraph)
 
+#Creation of information and monetry network data
+#First, a matrix is created, and thereafter names 
+#are assigned the the relevant columns.
 KNOKI <-  matrix(
   c(0,1,0,0,1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,0,0,1,0,1,1,1,1,0,0,1,1,1,0,0,1,0,1,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,0,0,0,1,0,1,0,0,1,0,1,1,0,0,0,0,0,1,1,0,1,1,0,1,0,1,0,0,1,0,0,1,0,1,0,0,0,1,1,1,0,1,0,1,0,0,0),
   nrow=10,
@@ -19,6 +23,10 @@ KNOKE <-  matrix(
 
 dimnames(KNOKE) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U","W","W"))
 
+#Once the matrices have been created, they are
+#converted into networks. Thereafter, a summary
+#is run on each in order to further understand
+#data structure
 KNOKI.n <- as.network(KNOKI)
 KNOKE.n <- as.network(KNOKE)
 KNOKI.n
@@ -29,8 +37,9 @@ summary(KNOKE.n)
 
 
 #In this instance, Binary Networks use density for a degree of central tendency
-
-#When creating predicitions of network densities, creating the hypothesus around an expected density is necessary and then to measure vairation around the expected and actual density
+#When creating predicitions of network densities, creating the hypothesus around 
+#an expected density is necessary and then to measure vairation around the expected 
+#and actual density
 network.density(KNOKI.n)
 network.density(KNOKE.n)
 
@@ -42,10 +51,16 @@ densities <- sapply(1:B, function(x)
   graph.density(graph_from_adjacency_matrix(KNOKI.boot[[x]])))
 mean(densities)
 
-
+#IN order to produce a sample distribution of density 
+#measures, wi know bootstrap and thereafter 
+#re-calcukate density
 KNOK.bootstrap <- bootstrap(KNOKI)
 network.density(KNOK.bootstrap)
 
+#Here, a quadratic assignment procedure (QAP) hypothesis 
+#test is performed. In a qaptest, an arbitrary graph-level
+#statistic(computed on the first argument, by the second) 
+#is tested against a qap null hypothesis.
 KNOK.cor <- qaptest(list(KNOKE, KNOKI), gcor, g1=1, g2=2, reps=2000)
 KNOK.cor
 
@@ -54,6 +69,7 @@ KNOK.den
 
 plot(KNOK.cor, xlim=c(-0.25, 0.4))
 
+#Performance of Standard Multiple Regression Analysis 
 nl<-netlm(KNOKE.n,           # Dependent variable/network
           KNOKI.n,           # List the independent variables/networks
           reps=1000)  
@@ -72,8 +88,11 @@ gcor(KNOKI, KNOKE)
 #KNOK.group = factor(rep(letters[1:2], each = 100))
 #fit = lm(formula = KNOK.v ~ KNOK.group)
 
-<<<<<<< HEAD
 cug.test(KNOKE.n, cmode="size")
+
+
+
+
 
 #### Darren Trying Something ####
 
