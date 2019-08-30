@@ -1,0 +1,197 @@
+---
+title: "Inference Tutorial"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+### Introduction
+
+The purpose of social network analysis is to investigate complex relationships and interactions amongst entities within a network. Advanced social network analysis techniques can be used to answer question such as:  
+
+
+* With whom will an individual develop relationships? 
+* How does an individual interact with others via such relationships?
+* Who is central or an opinion leader in the social network to which an individual belongs?   
+
+
+Social network analysis techniques can be categorized as either descriptive techniques or statistical inference techniques. One of the main limitations of descriptive techniques is that it is difficult to analyze certain characteristics of social networks in a relative sense. For example, if a particular social network has a certain number of ties among the members, with descriptive methods we can hardly determine the degree to which the members of the network are densely connected. On the other hand, statistical inference techniques enable us to produce appropriate conclusions about network data that goes beyond the immediate scope of the data. 
+
+```{r Setupe,results='hide'}
+# Import the libraries needed to complete this tutorial
+pacman::p_load(statnet,dplyr,resample,snowboot,igraph)
+```
+
+```{r Create Data}
+# Creation of information and monetry network data. First, a matrix is created, and thereafter names are assigned to the relevant columns before being mapped to a network variable
+KNOKI <-  matrix(
+  c(0,1,0,0,1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,0,0,1,0,1,1,1,1,0,0,1,1,1,0,0,1,0,1,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,0,0,0,1,0,1,0,0,1,0,1,1,0,0,0,0,0,1,1,0,1,1,0,1,0,1,0,0,1,0,0,1,0,1,0,0,0,1,1,1,0,1,0,1,0,0,0),
+  nrow=10,
+  ncol=10,
+  byrow=T)
+dimnames(KNOKI) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U","W","W"))
+
+KNOKE <-  matrix(
+  c(0,0,1,0,1,0,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,1,1,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0),
+  nrow=10,
+  ncol=10,
+  byrow=T)
+
+dimnames(KNOKE) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U","W","W"))
+
+KNOKI.n <- as.network(KNOKI)
+KNOKE.n <- as.network(KNOKE)
+```
+
+```{r The Data,paged.print=TRUE}
+# Summary run to gain a better insight of the networks
+KNOKI.n
+KNOKE.n
+summary(KNOKI.n)
+summary(KNOKE.n)
+```
+
+```{r Create Matrices}
+# Remove diagonal because it throws off any matrix calculations
+KNOKI.m <- diag.remove(as.sociomatrix(KNOKI.n)) 
+KNOKE.m <- diag.remove(as.sociomatrix(KNOKE.n))
+
+# Is density == mean for a network?
+mean(KNOKI.m,na.rm = T) == network.density(KNOKI.n)
+```
+
+```{r}
+# In this instance, Binary Networks use density for a degree of central tendency. When creating predicitions of network densities, creating the hypothesus around an expected density is necessary and then to measure vairation around the expected and actual density
+
+network.density(KNOKI.n)
+network.density(KNOKE.n)
+```
+
+```{r Average Densities from Bootstrapping}
+# In order to produce a sample distribution of density measures, we use bootstrapping to recreate sample networks and thereafter re-calcukate density
+
+set.seed(1)
+B <- 500
+KNOKI.boot <- vertboot(KNOKI, B)
+
+densities <- sapply(1:B, function(x)
+  graph.density(graph_from_adjacency_matrix(KNOKI.boot[[x]])))
+mean(densities)
+
+```
+
+```{r Univariate Descriptive Statistics for KNOKI (Information) Network Columns}
+# Valuating Univariate Descriptive Statistics for KNOKI (Information) Network Columns 
+
+mat <- t(tibble(
+mean = round(apply(KNOKI.m, 2, mean, na.rm = T),3),
+stdev = round(apply(KNOKI.m, 2, sd, na.rm = T),3),
+sum = round(apply(KNOKI.m, 2, sum, na.rm = T),3),
+var = round(apply(KNOKI.m, 2, var, na.rm = T),3),
+min = round(apply(KNOKI.m, 2, min, na.rm = T),3),
+max = round(apply(KNOKI.m, 2, max, na.rm = T),3)
+)) %>% data.frame()
+colnames(mat) <- colnames(KNOKI.m)
+mat
+```
+
+```{r Univariate Descriptive Statistics for KNOKI (Information) Network Rows}
+# Valuating Univariate Descriptive Statistics for KNOKI (Information) Network Rows 
+
+mat <- t(tibble(
+mean = round(apply(KNOKI.m, 1, mean, na.rm = T),3),
+stdev = round(apply(KNOKI.m, 1, sd, na.rm = T),3),
+sum = round(apply(KNOKI.m, 1, sum, na.rm = T),3),
+var = round(apply(KNOKI.m, 1, var, na.rm = T),3),
+min = round(apply(KNOKI.m, 1, min, na.rm = T),3),
+max = round(apply(KNOKI.m, 1, max, na.rm = T),3)
+)) %>% data.frame()
+colnames(mat) <- colnames(KNOKI.m)
+mat
+```
+
+```{r Univariate Descriptive Statistics for KNOKE (Money) Network Columns}
+# Valuating Univariate Descriptive Statistics for KNOKE (Money) Network Columns 
+
+mat <- t(tibble(
+mean = round(apply(KNOKE.m, 2, mean, na.rm = T),3),
+stdev = round(apply(KNOKE.m, 2, sd, na.rm = T),3),
+sum = round(apply(KNOKE.m, 2, sum, na.rm = T),3),
+var = round(apply(KNOKE.m, 2, var, na.rm = T),3),
+min = round(apply(KNOKE.m, 2, min, na.rm = T),3),
+max = round(apply(KNOKE.m, 2, max, na.rm = T),3)
+)) %>% data.frame()
+colnames(mat) <- colnames(KNOKE.m)
+mat
+```
+
+```{r Univariate Descriptive Statistics for KNOKE (Money) Network Rows}
+# Valuating Univariate Descriptive Statistics for KNOKE (Money) Network Rows 
+
+mat <- t(tibble(
+mean = round(apply(KNOKE.m, 1, mean, na.rm = T),3),
+stdev = round(apply(KNOKE.m, 1, sd, na.rm = T),3),
+sum = round(apply(KNOKE.m, 1, sum, na.rm = T),3),
+var = round(apply(KNOKE.m, 1, var, na.rm = T),3),
+min = round(apply(KNOKE.m, 1, min, na.rm = T),3),
+max = round(apply(KNOKE.m, 1, max, na.rm = T),3)
+)) %>% data.frame()
+colnames(mat) <- colnames(KNOKE.m)
+mat
+```
+
+```{r Correlating Networks}
+# Correlating both networks
+
+gcor(list(KNOKE, KNOKI))
+```
+
+```{r QAP test}
+# Here, a quadratic assignment procedure (QAP) hypothesis test is performed. In a qaptest, an arbitrary graph-level statistic(computed on the first argument, by the second) is tested against a qap null hypothesis
+
+(KNOK.cor <- qaptest(list(KNOKE, KNOKI), gcor, g1=1, g2=2, reps=2000))
+```
+
+```{r Plotting QAP Test}
+# Plotting QAP correlated networks
+
+plot(KNOK.cor, xlim=c(-0.25, 0.4))
+```
+
+```{r QAP Linear Regression}
+# Performance of Standard Multiple Regression Analysis 
+
+nl<-netlm(KNOKE.n, KNOKI.n, reps=1000)  
+summary(nl)
+```
+
+```{r QAP Logistic Regression}
+# QAP Logistic Regression
+
+nlog<-netlogit(KNOKE.n, KNOKI.n,reps=1000)
+summary(nlog)
+```
+
+```{r Better View}
+summary(KNOK.cor)
+```
+
+```{r}
+# Creating a network coding each element as "1" if both are private or both are non-private, and a "0" if they are of mixed types
+
+KNOKP.n <-  matrix(
+  c(0,1,0,1,0,0,0,1,0,1,1,0,0,1,0,0,0,1,0,1,0,0,0,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,0,1,0,0,1,1,0,1,0,0,0,1,0,1,0,1,0,1,0,0,0,1,0,1,1,0,0,1,0,1,1,0,1,0,0,0,0,0,1,0,0,1,0,1,1,1,0,0,0,1,1,0,1,0,0,0,1,0,0),
+  nrow=10,
+  ncol=10,
+  byrow=T)
+
+dimnames(KNOKP.n) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U","W","W"))
+```
+
+```{r}
+#Performance of Standard Multiple Regression analysis by regressing each element in the network on its corresponding elements in the information network
+
+nl_p<-netlm(KNOKI.n, KNOKP.n, reps=1000)  
+summary(nl_p)
+```
+
