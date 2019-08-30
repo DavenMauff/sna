@@ -1,0 +1,96 @@
+---
+title: "Graph Regression"
+output: html_notebook
+---
+
+```{r Setup}
+pacman::p_load(statnet,dplyr)
+```
+
+```{r Create Data}
+KNOKI <-  matrix(
+  c(0,1,0,0,1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,0,0,1,0,1,1,1,1,0,0,1,1,1,0,0,1,0,1,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,0,0,0,1,0,1,0,0,1,0,1,1,0,0,0,0,0,1,1,0,1,1,0,1,0,1,0,0,1,0,0,1,0,1,0,0,0,1,1,1,0,1,0,1,0,0,0),
+  nrow=10,
+  ncol=10,
+  byrow=T)
+dimnames(KNOKI) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U","W","W"))
+
+KNOKE <-  matrix(
+  c(0,0,1,0,1,0,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,1,1,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0),
+  nrow=10,
+  ncol=10,
+  byrow=T)
+
+dimnames(KNOKE) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U","W","W"))
+
+KNOKI.n <- as.network(KNOKI)
+KNOKE.n <- as.network(KNOKE)
+```
+
+```{r Have a look, paged.print=TRUE}
+KNOKI.n
+KNOKE.n
+summary(KNOKI.n)
+summary(KNOKE.n)
+```
+
+```{r Create Matrix representations}
+# Remove diagonal because it throws off any matrix calculations
+KNOKI.m <- diag.remove(as.sociomatrix(KNOKI.n)) 
+KNOKE.m <- diag.remove(as.sociomatrix(KNOKE.n))
+
+# Is density == mean for a network?
+mean(KNOKI.m,na.rm = T) == network.density(KNOKI.n)
+```
+
+```{r Univariate descriptive statistics for Knoke information network rows}
+mat <- data_frame(
+mean = round(apply(KNOKI.m, 1, mean, na.rm = T),3),
+stdev = round(apply(KNOKI.m, 1, sd, na.rm = T),3),
+sum = round(apply(KNOKI.m, 1, sum, na.rm = T),3),
+var = round(apply(KNOKI.m, 1, var, na.rm = T),3),
+min = round(apply(KNOKI.m, 1, min, na.rm = T),3),
+max = round(apply(KNOKI.m, 1, max, na.rm = T),3)
+) %>% data.frame()
+colnames(mat) <- colnames(KNOKI.m)
+mat
+```
+
+```{r Univariate descriptive statistics for Knoke information network columns}
+mat <- t(data_frame(
+mean = round(apply(KNOKI.m, 2, mean, na.rm = T),3),
+stdev = round(apply(KNOKI.m, 2, sd, na.rm = T),3),
+sum = round(apply(KNOKI.m, 2, sum, na.rm = T),3),
+var = round(apply(KNOKI.m, 2, var, na.rm = T),3),
+min = round(apply(KNOKI.m, 2, min, na.rm = T),3),
+max = round(apply(KNOKI.m, 2, max, na.rm = T),3)
+)) %>% data.frame()
+colnames(mat) <- colnames(KNOKI.m)
+mat
+```
+
+```{r Correlate networks}
+gcor(list(KNOKE, KNOKI))
+```
+
+
+```{r QAP test}
+(KNOK.cor <- qaptest(list(KNOKE, KNOKI), gcor, g1=1, g2=2, reps=2000))
+```
+`p(f(perm) >= f(d)): 0.7`  = Probability that the correlation beteen the two networks is smaller or equal to a random graph
+`p(f(perm) <= f(d)): 0.434` = Probability that the correlation between the two networks is bigger than or equal to a random graph
+
+In other words. 
+  
+  1. Correlate (Pearson) G1 and G2 ```gcor(list(KNOKE, KNOKI))```, which gives you  ```r (gcor(list(KNOKE, KNOKI)))[2]``` correlation.
+  2. Generate random graphs G3:G2003 and correlate G1 with each.
+  3. Out of the 2000 times, how many of them had a correlation of ```r (gcor(list(KNOKE, KNOKI)))[2]``` or higher?
+  4. the answer is ```0.424*2000 = ``` ```r 0.424*2000```
+  
+Match the above to Figure 18.8 in the Hanneman chapter...
+
+Some legwork guys...
+
+```{r Nicer look at the model}
+summary(KNOK.cor)
+```
