@@ -47,7 +47,9 @@ set.seed(1)
 B <- 500
 KNOKI.boot <- vertboot(KNOKI, B)
 
-densities <- sapply(1:B, function)
+densities <- sapply(1:B, function(x)
+  graph.density(graph_from_adjacency_matrix(KNOKI.boot[[x]])))
+mean(densities)
 
 #IN order to produce a sample distribution of density 
 #measures, wi know bootstrap and thereafter 
