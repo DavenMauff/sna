@@ -6,7 +6,7 @@ library(igraph)
 
 #Creation of information and monetry network data
 #First, a matrix is created, and thereafter names 
-#are assigned the the relevant columns.
+#are assigned the the relevant columns before being mapped to a network variable
 KNOKI <-  matrix(
   c(0,1,0,0,1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,0,0,1,0,1,1,1,1,0,0,1,1,1,0,0,1,0,1,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,0,0,0,1,0,1,0,0,1,0,1,1,0,0,0,0,0,1,1,0,1,1,0,1,0,1,0,0,1,0,0,1,0,1,0,0,0,1,1,1,0,1,0,1,0,0,0),
   nrow=10,
