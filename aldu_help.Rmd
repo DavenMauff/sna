@@ -1,6 +1,9 @@
 ---
 title: "Graph Regression"
-output: html_notebook
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 ```{r Setup}
@@ -8,6 +11,7 @@ pacman::p_load(statnet,dplyr)
 ```
 
 ```{r Create Data}
+### Poes
 KNOKI <-  matrix(
   c(0,1,0,0,1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,0,0,1,0,1,1,1,1,0,0,1,1,1,0,0,1,0,1,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,0,0,0,1,0,1,0,0,1,0,1,1,0,0,0,0,0,1,1,0,1,1,0,1,0,1,0,0,1,0,0,1,0,1,0,0,0,1,1,1,0,1,0,1,0,0,0),
   nrow=10,
