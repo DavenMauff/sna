@@ -44,14 +44,14 @@ mean(KNOKI.m,na.rm = T) == network.density(KNOKI.n)
 ```
 
 ```{r Univariate descriptive statistics for Knoke information network rows}
-mat <- data_frame(
+mat <- t(data_frame(
 mean = round(apply(KNOKI.m, 1, mean, na.rm = T),3),
 stdev = round(apply(KNOKI.m, 1, sd, na.rm = T),3),
 sum = round(apply(KNOKI.m, 1, sum, na.rm = T),3),
 var = round(apply(KNOKI.m, 1, var, na.rm = T),3),
 min = round(apply(KNOKI.m, 1, min, na.rm = T),3),
 max = round(apply(KNOKI.m, 1, max, na.rm = T),3)
-) %>% data.frame()
+)) %>% data.frame()
 colnames(mat) <- colnames(KNOKI.m)
 mat
 ```
