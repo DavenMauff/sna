@@ -420,13 +420,13 @@ KNOKP.n
 ```
 
 
-As you can see, we have created another 10 x 10 matrix, coding the cell to be 1 if the interacting organisations are both private or both non-private and 0 if the interacting organisations are a mix (a private organisation interacting with a non-private organisation). We can now perform a standard multiple regression analysis by regressing each element in the information network (Knoki) on its corresponding elements in the monetary network (Knoke) and the institution network (Knokp). Knoki will be our dependant variable and Knoke and Knokp will be our two independent variables. We will again be using QAP. 
+As you can see, we have created another 10 x 10 matrix, coding the cell to be 1 if the interacting organisations are both private or both non-private and 0 if the interacting organisations are a mix (a private organisation interacting with a non-private organisation). We can now perform a standard multiple regression analysis by regressing each element in the information network (Knoki) on its corresponding elements in the monetary network (Knoke) and the institution network (Knokp). Knoki will be our dependant variable and Knoke and Knokp will be our two independent variables.  
 
 
 ```{r}
 #Performance of Standard Multiple Regression analysis by regressing each element in the network on its corresponding elements in the information network
 
-nl_p<-netlm(KNOKI.n, KNOKP.n, reps=1000)  
+nl_p<-netlm(KNOKI.n, list(KNOKE.n, KNOKP.n), reps=1000)  
 summary(nl_p)
 ```
 
