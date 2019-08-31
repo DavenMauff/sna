@@ -18,28 +18,36 @@ The purpose of social network analysis is to investigate complex relationships a
 Social network analysis techniques can be categorized as either descriptive techniques or statistical inference techniques. One of the main limitations of descriptive techniques is that it is difficult to analyze certain characteristics of social networks in a relative sense. For example, if a particular social network has a certain number of ties among the members, with descriptive methods we can hardly determine the degree to which the members of the network are densely connected. On the other hand, statistical inference techniques enable us to produce appropriate conclusions about network data that goes beyond the immediate scope of the data.
 
 
-The aim of this tutorial is to give you a basic introduction to statistical inference of network data with RStudio. The tutorial will be structured as follows (still in progress): 
+The aim of this tutorial is to give you a basic introduction to statistical inference of network data with RStudio. The tutorial will be structured as follows: 
 
 
 * Understanding network data in relation to statistics. 
 * Analysing the dataset. 
 * Describing one network. 
-* Exercise one: calculating the density of networks against a hypothesis. 
-* Understanding the questions – how to compare datasets to get characteristics such as density, how to do regression with datasets. 
-* Answering the question 1.
-* Answering question 2. 
+* Exercise 1: 
+    + Univariate analysis: calculating the density of 1 network against a hypothesis.
+    + Bivariate analysis: calculating the density of 2 networks against a hypothesis. 
+* Exercise 2:correlation between networks.
+* Exercise 3: network regression. 
+* Conclusion
+
 
 
 # Understanding network data in relation to statistics
 
 
 Before we start, there are two essential concepts that you must understand about applying statistics to network data.
+
+
 Firstly, social network analysis is about relations among actors, not about relations between variables. This is extremely important to understand because it means that rather than describing distributions of attributes of actors (or “variables), we are describing the distributions of relations among actors. Therefore, in applying statistics to network data, we are concerned with issues like the average strength of relations between actors, for example: 
+
 
 *“Is the strength of ties between actors in a network correlated with the centrality of the actors in the network?"*
 
 
-Secondly, many of the standard inferential statistic tools that are concerned with the distribution of attributes cannot be applied directly to network data. This is because, unlike attribute analysis, the observations in network data are not independent samplings from populations. For example, in network data, we might observe Chad’s tie with Darren, while another observation might be Darren’s tie with Ryan. Network analysis says that we cannot suppose that these relations are independent because Darren is involved in two of the observations and there is a strong likelihood that we will infer another observation which depicts Chad’s tie with Ryan. Standard inferential tests assume independent observations and therefore, if we apply standard inferential statistics to observations that are not independent, it will produce seriously misleading results. 
+Secondly, many of the standard inferential statistic tools that are concerned with the distribution of attributes cannot be applied directly to network data. This is because, unlike attribute analysis, the observations in network data are not independent samplings from populations. For example, in network data, we might observe Chad’s tie with Darren, while another observation might be Darren’s tie with Ryan. Network analysis says that we cannot suppose that these relations are independent because Darren is involved in two of the observations and there is a strong likelihood that we will infer another observation which depicts Chad’s tie with Ryan. Standard inferential tests assume independent observations and therefore, if we apply standard inferential statistics to observations that are not independent, it will produce seriously misleading results.
+
+
 In order to overcome these challenges, when applying statistics to network data, we need to use alternative numerical approaches. These approaches are known as “bootstrapping” and permutations but for now, let’s start with the tutorial. 
 
 
@@ -52,9 +60,11 @@ This tutorial is purely for introductory purposes and so, the following sections
 For this tutorial, we will be using the Knoke and Knoki datasets which describes two relations; the exchange of information and the exchange of money among 10 organizations. The following code exhibits the money exchange matrix and the information exchange matrix:
 
 
-```{r Setup,results='hide'}
+```{r results='hide'}
+
 # Import the libraries needed to complete this tutorial
 pacman::p_load(statnet,dplyr,resample,snowboot,igraph)
+
 ```
 
 
@@ -75,8 +85,22 @@ KNOKE <-  matrix(
 
 dimnames(KNOKE) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U","W","W"))
 
+```
+
+
+```{r}
+
+#Display the matrices
+print("Matrix #1: KNOKI")
+KNOKI #information
+
+print("Matrix #2: KNOKE")
+KNOKE #money
+
+#Below, we have created networks from the matrices
 KNOKI.n <- as.network(KNOKI)
 KNOKE.n <- as.network(KNOKE)
+
 ```
 
 
@@ -98,36 +122,53 @@ This will bring us to the first exercise which involves finding the degree to wh
 
 Before we start with the first exercise, let’s do an in-depth analysis of one of the matrices, we will use the Knoke matrix, in order to solidify our understanding of the various statistical values which we may observe. 
 
+```{r}
 
-```{r The Data,paged.print=TRUE}
-# Summary run to gain a better insight of the networks
-summary(KNOKE.n)
+KNOKE
+
 ```
 
+
+Firstly, it is important  to note that this particular dataset is asymmetric and binary and the data which we are observing is the relations between the actors. So, in each matrix we have 10 x 10 = 100 observations or cases. For many analyses, the ties of actors with themselves (the main diagonal) are not meaningful and so there is actually N x N-1 = 90 observations. If the data were symmetric (Xij = Xji), half of the observations would be redundant and so there would be N x N-1 / 2 = 45 observations, however, this is not the case for our dataset. 
+
+
+The first thing we are going to do is summarise some of the most basic characteristics of the distribution of these scores. To do this, we are going to generate the most commonly used statistical measures for the Knoke matrix.
+
+
 ```{r Create Matrices}
+
 # Remove diagonal because it throws off any matrix calculations
 KNOKI.m <- diag.remove(as.sociomatrix(KNOKI.n)) 
 KNOKE.m <- diag.remove(as.sociomatrix(KNOKE.n))
 
-# Is density == mean for a network?
-mean(KNOKI.m,na.rm = T) == network.density(KNOKI.n)
 ```
 
 
-Firstly, it is important  to note that this particular dataset is asymmetric and binary. The scale of measurement, binary or valued, matters in making proper choices about interpretation and application of many statistical tools. The data which we are observing is the relations between the actors. So, in each matrix we have 10 x 10 = 100 observations or cases. For many analyses, the ties of actors with themselves (the main diagonal) are not meaningful and so there is actually N ^ N-1 = 90 observations. If the data were symmetric (Xij = Xji), half of the observations would be redundant and so there would be N ^ N-1 / 2 = 45 observations, however, this is not the case for our dataset.
+```{r paged.print=TRUE}
+
+# Summary run to gain a better insight of the matrix
+summary(KNOKE.n)
+
+```
 
 
-The first thing we are going to do is summarise some of the most basic characteristics of the distribution of these scores. To do this, we are going to generate the most commonly used statistical measures for the Knoke matrix. 
+```{r paged.print=TRUE}
 
-############ need descr stats for network ###########
+# Summary run to gain a better insight of the matrix
+summary(KNOKE.m)
 
-By looking at the data we can see that the number of observations is 90 which range from a minimum score of 0 to a maximum score of 1. The sum of the ties is “x” and the average value (mean) of the ties is x/90 = i. Due to the fact that our relations have been coded as a “dummy” variables (0 for no relation, 1 for a relation), the mean is also the proportion of possible ties that are present (or the density) within the network. What we can also calculate is the coefficient of variation, SD / mean x 100 = “t”. This suggests quite a lot of variation as the percentage of the average score.
-
-
-Adding onto this, we might also want to examine the distribution of ties for each actor, opposed to the distribution of ties for the entire network.
+```
 
 
-```{r Univariate descriptive statistics for Knoke information network rows}
+By looking at the data we already know that the number of observations is 90 which range from a minimum score of 0 to a maximum score of 1. By analysing the summary of the matrix we can observe that the sum of the ties (total edges) is 22 and the average value (density) of the ties is 22/90 = 0.244. Due to the fact that our relations have been coded as a “dummy” variables (0 for no relation, 1 for a relation), the mean is also the proportion of possible ties that are present (or the density) within the network. 
+
+
+Adding onto this, we might also want to examine the distribution of ties for each actor, opposed to the distribution of ties for the entire network. 
+
+
+```{r}
+
+#Univariate descriptive statistics for Knoke information network rows
 mat <- t(data_frame(
 mean = round(apply(KNOKI.m, 1, mean, na.rm = T),3),
 stdev = round(apply(KNOKI.m, 1, sd, na.rm = T),3),
@@ -138,9 +179,12 @@ max = round(apply(KNOKI.m, 1, max, na.rm = T),3)
 )) %>% data.frame()
 colnames(mat) <- colnames(KNOKI.m)
 mat
+
 ```
 
-```{r Univariate descriptive statistics for Knoke information network columns}
+```{r}
+
+#Univariate descriptive statistics for Knoke information network columns
 mat <- t(data_frame(
 mean = round(apply(KNOKI.m, 2, mean, na.rm = T),3),
 stdev = round(apply(KNOKI.m, 2, sd, na.rm = T),3),
@@ -151,13 +195,17 @@ max = round(apply(KNOKI.m, 2, max, na.rm = T),3)
 )) %>% data.frame()
 colnames(mat) <- colnames(KNOKI.m)
 mat
+
 ```
 
 
-By analysing the network of rows for the Knoke matrix we can see that actor 1 has a mean (or density) of tie sending of “0.444”. This means that the actor sent 4 ties to the available 9 actors- this can also be inferred by looking at the sum for actor 1 in the row network. If we look at the column network we can see that actor 1 received somewhat more money than they sent because their column mean is “0.556”. Adding onto this, if we scan down the column of means we can see that there is a considerable amount of variability across actors for sending and receiving money- some send more money while others get more money. It may be helpful to note that if we were working with valued data, rather than binary data, the measure of variability would be more informative across actors. This is because the variability of binary data is strictly a function of its mean. The main objective of this section was to emphasise the first essential concept that when we use statistics to describe network data, we are describing properties of the distribution of relations (or ties among actors) rather than properties of the distribution of attributes across actors.
+By analysing the network of rows for the Knoke matrix we can see that actor 1 has a mean (or density) of tie sending of 0,444. This means that the actor sent 4 ties to the available 9 actors- this can be inferred by looking at the ‘sum’ column for actor 1 in the row network. If we look at the column network we can see that actor 1 received somewhat more money than they sent because their column mean is 0,556. Adding onto this, if we scan down the column of means we can see that there is a considerable amount of variability across actors for sending and receiving money- some send more money while others get more money. 
 
 
-# First Exercise
+It is helpful to note that if we were working with valued data, rather than binary data, the measure of variability would be more informative across actors. This is because the variability of binary data is strictly a function of its mean. The main objective of this section was to emphasise the first essential concept that when we use statistics to describe network data, we are describing properties of the distribution of relations (or ties among actors) rather than properties of the distribution of attributes across actors. 
+
+
+# Exercise One: Univariate Analaysis
 
 
 Now that we have a better understanding of a single network, and the general statistical measures of that network, we can begin with the first exercise. As previously mentioned, network analysts are usually interested in a more holistic view of the network which usually involves the density, or average tie strength, of the network. It is typical for an analyst to want to prove or disprove a theory about the density of a network and for this we need to create a hypothesis (for the purpose of this exercise we will be working with the Knoki matrix):
@@ -171,74 +219,121 @@ This hypothesis suggests that all the organisations will exchange information wi
 
 
 ```{r}
+
 # In this instance, Binary Networks use density for a degree of central tendency. When creating predicitions of network densities, creating the hypothesus around an expected density is necessary and then to measure vairation around the expected and actual density
 
-network.density(KNOKI.n)
+summary(KNOKI.n)
+
 ```
 
 
-We can see that this theory is not true because the true network density of Knoki is not equal to 1.0, it is equal to “0.5444444”. However, perhaps the difference between what we see (density = “0.5444444”) and what the theory predicts (density = 1.0) is due to random variation (which occurs when the information is collected). Therefore, we need to find a way to ask the data to convince us that we can be confident in rejecting the hypothesis. To do this, we need to be able to compare the network to a randomly generated network of the same size. By comparing our network to a randomly generated network, we can determine the degree to which our network has the same density compared to a network generated by chance, allowing us to reduce the effect of random variation. This brings us back to the numerical approaches of “bootstrapping” and permutations.
+```{r}
+
+#If one wanted to pbtain only the network density however, use the following
+network.density(KNOKI.n)
+
+```
 
 
-Bootstrapping calculates random sub-samples from a network, for a specified number of times, to produce a sample distribution of density measures. We know that the difference between the test value (1,00)  and the observed value (“x”) = (“i”). Now, using the sample distribution of density measures, we can observe how often a difference this large (“i”) happens by random sample variation, if the null hypothesis (density = 1.0) was really true in the population. 
+We can see that this theory is not true because the true network density of Knoki is not equal to 1.0, it is equal to 0.544. However, perhaps the difference between what we see (density = 0.544) and what the theory predicts (density = 1.0) is due to random variation (which occurs when the information is collected). Therefore, we need to find a way to ask the data to convince us that we can be confident in rejecting the hypothesis. To do this, we need to be able to compare the network to a randomly generated network of the same size. By comparing our network to a randomly generated network, we can determine the degree to which our network has the same density compared to a network generated by chance, allowing us to reduce the effect of random variation. This brings us back to the numerical approaches of “bootstrapping” and permutations. 
 
 
-```{r Average Densities from Bootstrapping}
+Bootstrapping calculates random sub-samples from a network, for a specified number of times, to produce a sample distribution of density measures. We know that the difference between the test value (1,00)  and the observed value (0,544) is equal to (0,456). Now, using the sample distribution of density measures, we can observe how often a difference this large (0,456), happens by random sample variation, if the null hypothesis (density = 1.0) was really true in the population. If the difference happens often then the null hypothesis is true, if it does not happen often then it is false.  
+
+
+```{r}
 # In order to produce a sample distribution of density measures, we use bootstrapping to recreate sample networks and thereafter re-calcukate density
 
 set.seed(1)
-B <- 500
+B <- 5000
 KNOKI.boot <- vertboot(KNOKI, B)
 
 densities <- sapply(1:B, function(x)
   graph.density(graph_from_adjacency_matrix(KNOKI.boot[[x]])))
 mean(densities)
 
+### NOT GETTING THE RIGHT OUTPUT HERE, CHECK CATHS CODE ###
+
+#Maybe this?
+t.test(KNOKI)
 ```
 
 
-We can now observe that the mean of our sampling distribution is “o”, the standard deviation is  “t”, the test statistic is “q” and the significance is p = “r”, which means that the test is significant. Remember, the reason why we use bootstrapping rather than the classical formula for the standard error of a mean (s / sqr(N)) is because the classical formula is based on the notion that all observations are independent, which is not the case for network data. If we used the standard inferential formulas we would observe unrealistically small values for our network data which would result in two kinds of errors, the false positive or rejecting the null hypothesis when we shouldn’t. 
+We can now observe that the mean of our sampling distribution is 0.4893, the standard deviation (standard error) is  0,1201 and the test statistic (z-score) is -3,7943. ‘p’ values are significant if they fall between -0.05 and 0.05, they are insignificant if they fall outside of these values. As we can see, the first p value for the “proportion of absolute differences as large as observed” is equal to 1.0, therefore, it is insignificant and this means that the null hypothesis is not true. The last p value, which infers that “the proportion of difference is smaller than the one observed” is valued at p = 0.0002, therefore it is significant. This means that, throughout the tests, the proportion of difference is smaller than the one we observed (0,456) and this also proves that the null hypothesis is false because the proportion of difference would have to be greater than or equal to the one we observed to reach the hypothesized density of 1.0. 
 
 
-In the above example we were working with univariate analysis (analysis on one network), we will now move on to bivariate analysis (analysis of two networks). The basic question of bivariate analysis on network data is:
+Remember, the reason why we use bootstrapping rather than the classical formula for the standard error of a mean (s / sqr(N)) is because the classical formula is based on the notion that all observations are independent, which is not the case for network data. If we used the standard inferential formulas we would observe unrealistically small values for our network data which would result in two kinds of errors, the false positive or rejecting the null hypothesis when we shouldn’t. 
+
+
+# Exercise One: Bivariate Analysis
+
+
+In the above example we were working with univariate analysis (analysis on one network), we will now move on to bivariate analysis (analysis of two networks). Bivariate analysis is important because it enables network analysts to continue to infer holistic information about the network. In fact, bivariate analysis brings up the second major emphasis of network analysis: seeing how the whole pattern of individual choices gives rise to more holistic patterns. The basic question of bivariate analysis on network data is:
 
 
 *“Do the pattern of ties for one relation among a set of actors align with the pattern of ties for another relation among the same set of actors?”*
 
 
-In summary, this question is asking whether the relations between two networks, with the same set of actors, correlate or not?  
+In summary, this question is asking whether the relations between two networks, with the same set of actors, correlate or not? We can answer this by analysing different kinds of relations within the network, such as: 
 
 
+* Does the central tendency (mean) of one relation differ significantly from the central tendency (mean) of another? 
+*  If we know that the relation of one type exists between two actors, how much does this increase (or decrease) the likelihood that the relation of another type exists between them?
 
-```{r Univariate Descriptive Statistics for KNOKI (Information) Network Columns}
-# Valuating Univariate Descriptive Statistics for KNOKI (Information) Network Columns 
 
-mat <- t(tibble(
-mean = round(apply(KNOKI.m, 2, mean, na.rm = T),3),
-stdev = round(apply(KNOKI.m, 2, sd, na.rm = T),3),
-sum = round(apply(KNOKI.m, 2, sum, na.rm = T),3),
-var = round(apply(KNOKI.m, 2, var, na.rm = T),3),
-min = round(apply(KNOKI.m, 2, min, na.rm = T),3),
-max = round(apply(KNOKI.m, 2, max, na.rm = T),3)
-)) %>% data.frame()
-colnames(mat) <- colnames(KNOKI.m)
-mat
+We will work through the first question now but the following question will be covered in exercise 2 of this tutorial. Let’s relate the first question to our networks. Our networks describe the money and information exchange among organisations (the 2 separate matrices: Knoke and Knoki). Therefore, in relation to the first question, we are asking:
+
+
+*“Which ties are more prevalent: money exchange ties or information exchange ties?”*
+
+
+ In other words, “which network has the higher density?”. This question is answered by analysing the densities of both networks and comparing them. However, similarly to the univariate analysis, we must make use of “bootstrapping” to ensure that our observation is accurate and not a result of random variation. We can already observe that the density of the information exchange matrix (0,544) is higher than the density of the monetary exchange matrix (0,244). Therefore, our hypothesis should be:
+
+
+*"Information exchange ties are more prevalent than monetary exchange ties”.*
+
+
+The density of Knoki (0,544) minus the density of Knoke (0,244) is equal to 0,3. Use the following code to observe how often a difference this large (0,3) happens by random sample variation:
+
+
+```{r}
+# Both compared to randomly generated matrices
+both.ttest <- t.test(KNOKI, KNOKE, paired = TRUE)
+both.ttest
+
+### NOT GETTING THE RIGHT OUTPUT HERE, CHECK CATHS CODE ###
 ```
 
-```{r Univariate Descriptive Statistics for KNOKI (Information) Network Rows}
-# Valuating Univariate Descriptive Statistics for KNOKI (Information) Network Rows 
 
-mat <- t(tibble(
-mean = round(apply(KNOKI.m, 1, mean, na.rm = T),3),
-stdev = round(apply(KNOKI.m, 1, sd, na.rm = T),3),
-sum = round(apply(KNOKI.m, 1, sum, na.rm = T),3),
-var = round(apply(KNOKI.m, 1, var, na.rm = T),3),
-min = round(apply(KNOKI.m, 1, min, na.rm = T),3),
-max = round(apply(KNOKI.m, 1, max, na.rm = T),3)
-)) %>% data.frame()
-colnames(mat) <- colnames(KNOKI.m)
-mat
-```
+By analysing the output we can see that we increased the number of permutations, for this test, to 10 000 (if we increase the number of random samples, I don’t know?) and that the standard deviation (classical standard error of difference) is 0,0697. Adding onto this, we can see that the first p value is equal to 0.0178, making it significant. The first p value states that “the proportion of absolute differences is as large as the one observed (0,3)” and because it is significant, it results in our hypothesis being true. This is because it maintains the observation that the Knoki matrix density is larger than the Knoke matrix density. 
+
+
+# Exercise Two: Correlation Between Networks
+
+
+The objective of this exercise is to come to a conclusion about whether the relations of the two networks correlate or not. We will do this by answering the previously stated question: “If we know that the relation of one type exists between two actors, how much does this increase (or decrease) the likelihood that the relation of another type exists between them?”. In other words, if two actors have a strong tie of one type, are they also likely to have a strong tie of another? Let’s start by relating this question to our networks:
+
+
+*“If two organizations exchange information, how likely is it that they will also exchange money?”*
+
+
+If organizations exchange information, this may create a sense of trust, making monetary exchange relations more likely. This could also be inferred the other way, if two organisations exchange money, this may facilitate more open communications and, as a result, the exchange of information. Therefore, we might hypothesise that: 
+
+
+*“The matrix of information relations would be positively correlated with the matrix of monetary relations”. *
+
+
+Otherwise stated, pairs that engage in one type of exchange are more likely to engage in the other. A positive correlation might be true, but it is possible that we could also observe:
+
+
+* A negative correlation- where money flows in one direction and information in the other direction.
+* No correlation- the two relations have nothing to do with one another. 
+
+
+To find out if the positive correlation is true we need to calculate the measures of nominal, ordinal and interval association between the relations in two matrices and use quadratic assignment procedure (QAP) to develop standard errors to test for the significance of an association. QAP is <Chad’s part here>. We can run the following code to correlate the Knoki matrix with the Knoke matrix:
+
+
+
 
 ```{r Correlating Networks}
 # Correlating both networks
@@ -276,6 +371,40 @@ summary(nlog)
 summary(KNOK.cor)
 ```
 
+
+The first column of the output (value) shows the values of 5 alternative measures of association:
+
+
+* The Pearson coefficient is a standard measure when both matrices have valued relations (our dataset does not have any valued relations). 
+* Simple matching and the Jaccard coefficient are reasonable measures when both relations are binary (this relates to our dataset).
+* Gamma would be a reasonable choice if one or both relations were measured on an ordinal scale. 
+* The Hamming distance is a measure of dissimilarity or distance between the scores in one matrix and the scores in the other.
+
+
+The third column (Avg) shows the average value of the measure of association across a large number of trials in which the rows and columns of the two matrices have been randomly permuted. In other words, what would the correlation be, on average, if we matched random actors? If we look at this value for the simple matching measure of association we can see that it is equal to 0,475. Therefore, this means that if there is a 1 in a cell in matrix one, there is a 47,5% chance there will be a 1 in the corresponding cell of matrix 2. However, due to the fact that we are analysing binary data and not valued relations, the average density of the matrices is strictly a function of its mean and therefore, the observed measures will hardly differ from a random result. 
+
+
+Rather, to test the hypothesis that there is an association,  we will look at the proportion of random trials (p values) that would generate a coefficient as large as (or as small as, depending on the measure) the statistic actually observed. These measures are reported in the columns labelled as “P(large)” and “P(small)”, while the most appropriate value to use to test the null hypothesis (which will always state that there is no association) is shown in the “Signif” column. 
+
+
+Therefore, if we look at the simple matching measure we can see that the signif value is equal to 0,721. This refers to the P(large) value and because the value is > 0,05, the test is insignificant. Therefore our hypothesis is not true, meaning that the matrix of information relations is not positively correlated to the matrix of money relations and, as a result, pairs that engage in information exchange are not more likely to engage in money exchange. 
+
+
+# Exercise Three: Network Regression
+
+
+The last exercise of this tutorial will deal with network regression. Rather than correlating one relation with another, we may wish to predict one relation knowing the other. The standard tool for this type of analysis is linear regression. Regression is <Indurain’s part here>.
+
+
+Suppose we want to make the following hypothesis:
+
+
+*“Institutionally similar organizations are more likely to exchange information”.*
+
+
+Therefore we want to be able to predict which of the organisations sent information to which others. To do this, we are going to treat the information exchange network (Knoki) as our dependant network with N = 90 (there are 90 observations) and we are going to create a new matrix which we will treat as one of our independent networks (linear regression may be extended to using more than one independent variable). Use the following code to make the new matrix:
+
+
 ```{r}
 # Creating a network coding each element as "1" if both are private or both are non-private, and a "0" if they are of mixed types
 
@@ -286,12 +415,83 @@ KNOKP.n <-  matrix(
   byrow=T)
 
 dimnames(KNOKP.n) = list(c(1,2,3,4,5,6,7,8,9,10), c("C","C","E","I","M","W","N","U","W","W"))
+
+KNOKP.n
 ```
+
+
+As you can see, we have created another 10 x 10 matrix, coding the cell to be 1 if the interacting organisations are both private or both non-private and 0 if the interacting organisations are a mix (a private organisation interacting with a non-private organisation). We can now perform a standard multiple regression analysis by regressing each element in the information network (Knoki) on its corresponding elements in the monetary network (Knoke) and the institution network (Knokp). Knoki will be our dependant variable and Knoke and Knokp will be our two independent variables. We will again be using QAP. 
+
 
 ```{r}
 #Performance of Standard Multiple Regression analysis by regressing each element in the network on its corresponding elements in the information network
 
 nl_p<-netlm(KNOKI.n, KNOKP.n, reps=1000)  
 summary(nl_p)
+```
+
+
+Through analysis of the output we can observe that the R-square value is “x/0,018”. This indicates that knowing whether one organisation sends money to another, and whether the two organisations are institutionally similar (both private/non-private), reduces uncertainty in predicting an information tie by is about “x/2%” (0.018 x 100 = 1.8% so ~ 2%). From the regression coefficients we see that the intercept value is  “y/0,613719”. This indicates that if two organizations are not of the same institutional type, and one does not send money to the other, the probability that one sends information to the other is “y/61%” (0,613719 x 100 = 61%). 
+
+
+By looking at the Knoke value within the regression coefficients we can see that it is equal to “i/-0,46”, while the Knokp value is equal to “t/-0,12”. This means that if one organization does exchange money with the other, this reduces (because of the minus sign) the probability of an information link by “i/46%”, while if two organisations are of the same institutional type, the probability of information sending is reduced (because of the minus sign) by “t/12%”. This gives us some interesting results, it suggests that monetary and informational linkages are alternative rather than re-enforcing and that institutionally similar organisations are less likely to communicate. 
+
+
+# Conclusion
+
+
+This brings us to the end of the tutorial. Let’s summarise what we have learnt: 
+
+
+* Two essential concepts about network data: 
+    + Network analysis is about relations among actors, NOT about relations between variables. 
+    + Observations in network data are NOT independent samplings from populations. 
+* Understanding matrices and binary data compared to valued data (the variability of binary data is strictly a function of its mean). 
+* Univariate analysis: 
+    + Comparing 1 network to randomly generated networks of the same size to prove/disprove a hypothesis. 
+* Bivariate analysis:
+    + Comparing 2 networks to randomly generated networks of the same size to answer the question: *“Does mean/density of one relation differ significantly from the mean/density of another?”.*
+    + Correlating 2 networks with the same set of actors to answer the question: *“If we know that the relation of one type exists between two actors, how much does this increase (or decrease) the likelihood that the relation of another type exists between them?”.*
+* Network regression: 
+    + Being able to predict one relation knowing the other. 
+
+
+############################################
+
+
+```{r}
+
+# Is density == mean for a network?
+mean(KNOKI.m,na.rm = T) == network.density(KNOKI.n)
+```
+
+```{r Univariate Descriptive Statistics for KNOKI (Information) Network Columns}
+# Valuating Univariate Descriptive Statistics for KNOKI (Information) Network Columns 
+
+mat <- t(tibble(
+mean = round(apply(KNOKI.m, 2, mean, na.rm = T),3),
+stdev = round(apply(KNOKI.m, 2, sd, na.rm = T),3),
+sum = round(apply(KNOKI.m, 2, sum, na.rm = T),3),
+var = round(apply(KNOKI.m, 2, var, na.rm = T),3),
+min = round(apply(KNOKI.m, 2, min, na.rm = T),3),
+max = round(apply(KNOKI.m, 2, max, na.rm = T),3)
+)) %>% data.frame()
+colnames(mat) <- colnames(KNOKI.m)
+mat
+```
+
+```{r Univariate Descriptive Statistics for KNOKI (Information) Network Rows}
+# Valuating Univariate Descriptive Statistics for KNOKI (Information) Network Rows 
+
+mat <- t(tibble(
+mean = round(apply(KNOKI.m, 1, mean, na.rm = T),3),
+stdev = round(apply(KNOKI.m, 1, sd, na.rm = T),3),
+sum = round(apply(KNOKI.m, 1, sum, na.rm = T),3),
+var = round(apply(KNOKI.m, 1, var, na.rm = T),3),
+min = round(apply(KNOKI.m, 1, min, na.rm = T),3),
+max = round(apply(KNOKI.m, 1, max, na.rm = T),3)
+)) %>% data.frame()
+colnames(mat) <- colnames(KNOKI.m)
+mat
 ```
 

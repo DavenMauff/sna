@@ -260,22 +260,28 @@ div.tocify {
 <li>Who is central or an opinion leader in the social network to which an individual belongs?</li>
 </ul>
 <p>Social network analysis techniques can be categorized as either descriptive techniques or statistical inference techniques. One of the main limitations of descriptive techniques is that it is difficult to analyze certain characteristics of social networks in a relative sense. For example, if a particular social network has a certain number of ties among the members, with descriptive methods we can hardly determine the degree to which the members of the network are densely connected. On the other hand, statistical inference techniques enable us to produce appropriate conclusions about network data that goes beyond the immediate scope of the data.</p>
-<p>The aim of this tutorial is to give you a basic introduction to statistical inference of network data with RStudio. The tutorial will be structured as follows (still in progress):</p>
+<p>The aim of this tutorial is to give you a basic introduction to statistical inference of network data with RStudio. The tutorial will be structured as follows:</p>
 <ul>
 <li>Understanding network data in relation to statistics.</li>
 <li>Analysing the dataset.</li>
 <li>Describing one network.</li>
-<li>Exercise one: calculating the density of networks against a hypothesis.</li>
-<li>Understanding the questions – how to compare datasets to get characteristics such as density, how to do regression with datasets.</li>
-<li>Answering the question 1.</li>
-<li>Answering question 2.</li>
+<li>Exercise 1:
+<ul>
+<li>Univariate analysis: calculating the density of 1 network against a hypothesis.</li>
+<li>Bivariate analysis: calculating the density of 2 networks against a hypothesis.</li>
+</ul></li>
+<li>Exercise 2:correlation between networks.</li>
+<li>Exercise 3: network regression.</li>
+<li>Conclusion</li>
 </ul>
 </div>
 <div id="understanding-network-data-in-relation-to-statistics" class="section level1">
 <h1>Understanding network data in relation to statistics</h1>
-<p>Before we start, there are two essential concepts that you must understand about applying statistics to network data. Firstly, social network analysis is about relations among actors, not about relations between variables. This is extremely important to understand because it means that rather than describing distributions of attributes of actors (or “variables), we are describing the distributions of relations among actors. Therefore, in applying statistics to network data, we are concerned with issues like the average strength of relations between actors, for example:</p>
+<p>Before we start, there are two essential concepts that you must understand about applying statistics to network data.</p>
+<p>Firstly, social network analysis is about relations among actors, not about relations between variables. This is extremely important to understand because it means that rather than describing distributions of attributes of actors (or “variables), we are describing the distributions of relations among actors. Therefore, in applying statistics to network data, we are concerned with issues like the average strength of relations between actors, for example:</p>
 <p><em>“Is the strength of ties between actors in a network correlated with the centrality of the actors in the network?”</em></p>
-<p>Secondly, many of the standard inferential statistic tools that are concerned with the distribution of attributes cannot be applied directly to network data. This is because, unlike attribute analysis, the observations in network data are not independent samplings from populations. For example, in network data, we might observe Chad’s tie with Darren, while another observation might be Darren’s tie with Ryan. Network analysis says that we cannot suppose that these relations are independent because Darren is involved in two of the observations and there is a strong likelihood that we will infer another observation which depicts Chad’s tie with Ryan. Standard inferential tests assume independent observations and therefore, if we apply standard inferential statistics to observations that are not independent, it will produce seriously misleading results. In order to overcome these challenges, when applying statistics to network data, we need to use alternative numerical approaches. These approaches are known as “bootstrapping” and permutations but for now, let’s start with the tutorial.</p>
+<p>Secondly, many of the standard inferential statistic tools that are concerned with the distribution of attributes cannot be applied directly to network data. This is because, unlike attribute analysis, the observations in network data are not independent samplings from populations. For example, in network data, we might observe Chad’s tie with Darren, while another observation might be Darren’s tie with Ryan. Network analysis says that we cannot suppose that these relations are independent because Darren is involved in two of the observations and there is a strong likelihood that we will infer another observation which depicts Chad’s tie with Ryan. Standard inferential tests assume independent observations and therefore, if we apply standard inferential statistics to observations that are not independent, it will produce seriously misleading results.</p>
+<p>In order to overcome these challenges, when applying statistics to network data, we need to use alternative numerical approaches. These approaches are known as “bootstrapping” and permutations but for now, let’s start with the tutorial.</p>
 </div>
 <div id="understanding-the-data" class="section level1">
 <h1>Understanding the Data</h1>
@@ -297,8 +303,37 @@ KNOKE &lt;-  matrix(
   ncol=10,
   byrow=T)
 
-dimnames(KNOKE) = list(c(1,2,3,4,5,6,7,8,9,10), c(&quot;C&quot;,&quot;C&quot;,&quot;E&quot;,&quot;I&quot;,&quot;M&quot;,&quot;W&quot;,&quot;N&quot;,&quot;U&quot;,&quot;W&quot;,&quot;W&quot;))
-
+dimnames(KNOKE) = list(c(1,2,3,4,5,6,7,8,9,10), c(&quot;C&quot;,&quot;C&quot;,&quot;E&quot;,&quot;I&quot;,&quot;M&quot;,&quot;W&quot;,&quot;N&quot;,&quot;U&quot;,&quot;W&quot;,&quot;W&quot;))</code></pre>
+<pre class="r"><code>#Display the matrices
+print(&quot;Matrix #1: KNOKI&quot;)</code></pre>
+<pre><code>## [1] &quot;Matrix #1: KNOKI&quot;</code></pre>
+<pre class="r"><code>KNOKI #information</code></pre>
+<pre><code>##    C C E I M W N U W W
+## 1  0 1 0 0 1 0 1 0 1 0
+## 2  1 0 1 1 1 0 1 1 1 0
+## 3  0 1 0 1 1 1 1 0 0 1
+## 4  1 1 0 0 1 0 1 0 0 0
+## 5  1 1 1 1 0 0 1 1 1 1
+## 6  0 0 1 0 0 0 1 0 1 0
+## 7  0 1 0 1 1 0 0 0 0 0
+## 8  1 1 0 1 1 0 1 0 1 0
+## 9  0 1 0 0 1 0 1 0 0 0
+## 10 1 1 1 0 1 0 1 0 0 0</code></pre>
+<pre class="r"><code>print(&quot;Matrix #2: KNOKE&quot;)</code></pre>
+<pre><code>## [1] &quot;Matrix #2: KNOKE&quot;</code></pre>
+<pre class="r"><code>KNOKE #money</code></pre>
+<pre><code>##    C C E I M W N U W W
+## 1  0 0 1 0 1 0 0 1 1 1
+## 2  0 0 1 0 0 0 0 0 0 0
+## 3  0 0 0 0 0 0 0 1 0 0
+## 4  0 1 1 0 0 0 1 1 1 0
+## 5  0 1 1 0 0 0 0 1 1 0
+## 6  0 0 0 0 0 0 0 0 0 0
+## 7  0 1 0 0 0 0 0 1 0 0
+## 8  0 0 0 0 0 0 0 0 1 1
+## 9  0 0 1 0 0 0 0 1 0 0
+## 10 0 0 0 0 0 0 0 0 0 0</code></pre>
+<pre class="r"><code>#Below, we have created networks from the matrices
 KNOKI.n &lt;- as.network(KNOKI)
 KNOKE.n &lt;- as.network(KNOKE)</code></pre>
 <p>As you can see, network data matrices consist of a square array of measurements. The rows of the array are the same set of observations, while each cell of the array describes a relationship between actors. In our dataset, each cell represents either the exchange of money or information between two organisations as a 1 or no exchange as a 0. By comparing rows of the array we can see which actors are similar to which other actors in whom they choose to exchange information or money. By looking at the columns, we can see who is similar to whom in terms of being chosen by others. This helps us to see which actors have similar positions in the network which brings us to the first major emphasis of network analysis: how are actors located or embedded within the overall network?</p>
@@ -312,7 +347,24 @@ KNOKE.n &lt;- as.network(KNOKE)</code></pre>
 <div id="decribing-one-network" class="section level1">
 <h1>Decribing one Network</h1>
 <p>Before we start with the first exercise, let’s do an in-depth analysis of one of the matrices, we will use the Knoke matrix, in order to solidify our understanding of the various statistical values which we may observe.</p>
-<pre class="r"><code># Summary run to gain a better insight of the networks
+<pre class="r"><code>KNOKE</code></pre>
+<pre><code>##    C C E I M W N U W W
+## 1  0 0 1 0 1 0 0 1 1 1
+## 2  0 0 1 0 0 0 0 0 0 0
+## 3  0 0 0 0 0 0 0 1 0 0
+## 4  0 1 1 0 0 0 1 1 1 0
+## 5  0 1 1 0 0 0 0 1 1 0
+## 6  0 0 0 0 0 0 0 0 0 0
+## 7  0 1 0 0 0 0 0 1 0 0
+## 8  0 0 0 0 0 0 0 0 1 1
+## 9  0 0 1 0 0 0 0 1 0 0
+## 10 0 0 0 0 0 0 0 0 0 0</code></pre>
+<p>Firstly, it is important to note that this particular dataset is asymmetric and binary and the data which we are observing is the relations between the actors. So, in each matrix we have 10 x 10 = 100 observations or cases. For many analyses, the ties of actors with themselves (the main diagonal) are not meaningful and so there is actually N x N-1 = 90 observations. If the data were symmetric (Xij = Xji), half of the observations would be redundant and so there would be N x N-1 / 2 = 45 observations, however, this is not the case for our dataset.</p>
+<p>The first thing we are going to do is summarise some of the most basic characteristics of the distribution of these scores. To do this, we are going to generate the most commonly used statistical measures for the Knoke matrix.</p>
+<pre class="r"><code># Remove diagonal because it throws off any matrix calculations
+KNOKI.m &lt;- diag.remove(as.sociomatrix(KNOKI.n)) 
+KNOKE.m &lt;- diag.remove(as.sociomatrix(KNOKE.n))</code></pre>
+<pre class="r"><code># Summary run to gain a better insight of the matrix
 summary(KNOKE.n)</code></pre>
 <pre><code>## Network attributes:
 ##   vertices = 10
@@ -345,20 +397,36 @@ summary(KNOKE.n)</code></pre>
 ## U 0 0 0 0 0 0 0 0 1 1
 ## W 0 0 1 0 0 0 0 1 0 0
 ## W 0 0 0 0 0 0 0 0 0 0</code></pre>
-<pre class="r"><code># Remove diagonal because it throws off any matrix calculations
-KNOKI.m &lt;- diag.remove(as.sociomatrix(KNOKI.n)) 
-KNOKE.m &lt;- diag.remove(as.sociomatrix(KNOKE.n))
-
-# Is density == mean for a network?
-mean(KNOKI.m,na.rm = T) == network.density(KNOKI.n)</code></pre>
-<pre><code>## [1] TRUE</code></pre>
-<p>Firstly, it is important to note that this particular dataset is asymmetric and binary. The scale of measurement, binary or valued, matters in making proper choices about interpretation and application of many statistical tools. The data which we are observing is the relations between the actors. So, in each matrix we have 10 x 10 = 100 observations or cases. For many analyses, the ties of actors with themselves (the main diagonal) are not meaningful and so there is actually N ^ N-1 = 90 observations. If the data were symmetric (Xij = Xji), half of the observations would be redundant and so there would be N ^ N-1 / 2 = 45 observations, however, this is not the case for our dataset.</p>
-<p>The first thing we are going to do is summarise some of the most basic characteristics of the distribution of these scores. To do this, we are going to generate the most commonly used statistical measures for the Knoke matrix.</p>
-<div id="need-descr-stats-for-network" class="section level12">
-<p>need descr stats for network</p>
-<p>By looking at the data we can see that the number of observations is 90 which range from a minimum score of 0 to a maximum score of 1. The sum of the ties is “x” and the average value (mean) of the ties is x/90 = i. Due to the fact that our relations have been coded as a “dummy” variables (0 for no relation, 1 for a relation), the mean is also the proportion of possible ties that are present (or the density) within the network. What we can also calculate is the coefficient of variation, SD / mean x 100 = “t”. This suggests quite a lot of variation as the percentage of the average score.</p>
+<pre class="r"><code># Summary run to gain a better insight of the matrix
+summary(KNOKE.m)</code></pre>
+<pre><code>##        C           C                E                I    
+##  Min.   :0   Min.   :0.0000   Min.   :0.0000   Min.   :0  
+##  1st Qu.:0   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0  
+##  Median :0   Median :0.0000   Median :1.0000   Median :0  
+##  Mean   :0   Mean   :0.3333   Mean   :0.5556   Mean   :0  
+##  3rd Qu.:0   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:0  
+##  Max.   :0   Max.   :1.0000   Max.   :1.0000   Max.   :0  
+##  NA's   :1   NA's   :1        NA's   :1        NA's   :1  
+##        M                W           N                U         
+##  Min.   :0.0000   Min.   :0   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0   1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median :0.0000   Median :0   Median :0.0000   Median :1.0000  
+##  Mean   :0.1111   Mean   :0   Mean   :0.1111   Mean   :0.6667  
+##  3rd Qu.:0.0000   3rd Qu.:0   3rd Qu.:0.0000   3rd Qu.:1.0000  
+##  Max.   :1.0000   Max.   :0   Max.   :1.0000   Max.   :1.0000  
+##  NA's   :1        NA's   :1   NA's   :1        NA's   :1       
+##        W                W         
+##  Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median :0.0000   Median :0.0000  
+##  Mean   :0.4444   Mean   :0.2222  
+##  3rd Qu.:1.0000   3rd Qu.:0.0000  
+##  Max.   :1.0000   Max.   :1.0000  
+##  NA's   :1        NA's   :1</code></pre>
+<p>By looking at the data we already know that the number of observations is 90 which range from a minimum score of 0 to a maximum score of 1. By analysing the summary of the matrix we can observe that the sum of the ties (total edges) is 22 and the average value (density) of the ties is 22/90 = 0.244. Due to the fact that our relations have been coded as a “dummy” variables (0 for no relation, 1 for a relation), the mean is also the proportion of possible ties that are present (or the density) within the network.</p>
 <p>Adding onto this, we might also want to examine the distribution of ties for each actor, opposed to the distribution of ties for the entire network.</p>
-<pre class="r"><code>mat &lt;- t(data_frame(
+<pre class="r"><code>#Univariate descriptive statistics for Knoke information network rows
+mat &lt;- t(data_frame(
 mean = round(apply(KNOKI.m, 1, mean, na.rm = T),3),
 stdev = round(apply(KNOKI.m, 1, sd, na.rm = T),3),
 sum = round(apply(KNOKI.m, 1, sum, na.rm = T),3),
@@ -377,7 +445,8 @@ mat</code></pre>
 ## var   0.278 0.194 0.250 0.278 0.111 0.250 0.250 0.250 0.250 0.278
 ## min   0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
 ## max   1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000</code></pre>
-<pre class="r"><code>mat &lt;- t(data_frame(
+<pre class="r"><code>#Univariate descriptive statistics for Knoke information network columns
+mat &lt;- t(data_frame(
 mean = round(apply(KNOKI.m, 2, mean, na.rm = T),3),
 stdev = round(apply(KNOKI.m, 2, sd, na.rm = T),3),
 sum = round(apply(KNOKI.m, 2, sum, na.rm = T),3),
@@ -394,34 +463,335 @@ mat</code></pre>
 ## var   0.278 0.111 0.278 0.278 0.111 0.111 0 0.194 0.278 0.194
 ## min   0.000 0.000 0.000 0.000 0.000 0.000 1 0.000 0.000 0.000
 ## max   1.000 1.000 1.000 1.000 1.000 1.000 1 1.000 1.000 1.000</code></pre>
-<p>By analysing the network of rows for the Knoke matrix we can see that actor 1 has a mean (or density) of tie sending of “0.444”. This means that the actor sent 4 ties to the available 9 actors- this can also be inferred by looking at the sum for actor 1 in the row network. If we look at the column network we can see that actor 1 received somewhat more money than they sent because their column mean is “0.556”. Adding onto this, if we scan down the column of means we can see that there is a considerable amount of variability across actors for sending and receiving money- some send more money while others get more money. It may be helpful to note that if we were working with valued data, rather than binary data, the measure of variability would be more informative across actors. This is because the variability of binary data is strictly a function of its mean. The main objective of this section was to emphasise the first essential concept that when we use statistics to describe network data, we are describing properties of the distribution of relations (or ties among actors) rather than properties of the distribution of attributes across actors.</p>
+<p>By analysing the network of rows for the Knoke matrix we can see that actor 1 has a mean (or density) of tie sending of 0,444. This means that the actor sent 4 ties to the available 9 actors- this can be inferred by looking at the ‘sum’ column for actor 1 in the row network. If we look at the column network we can see that actor 1 received somewhat more money than they sent because their column mean is 0,556. Adding onto this, if we scan down the column of means we can see that there is a considerable amount of variability across actors for sending and receiving money- some send more money while others get more money.</p>
+<p>It is helpful to note that if we were working with valued data, rather than binary data, the measure of variability would be more informative across actors. This is because the variability of binary data is strictly a function of its mean. The main objective of this section was to emphasise the first essential concept that when we use statistics to describe network data, we are describing properties of the distribution of relations (or ties among actors) rather than properties of the distribution of attributes across actors.</p>
 </div>
-</div>
-<div id="first-exercise" class="section level1">
-<h1>First Exercise</h1>
+<div id="exercise-one-univariate-analaysis" class="section level1">
+<h1>Exercise One: Univariate Analaysis</h1>
 <p>Now that we have a better understanding of a single network, and the general statistical measures of that network, we can begin with the first exercise. As previously mentioned, network analysts are usually interested in a more holistic view of the network which usually involves the density, or average tie strength, of the network. It is typical for an analyst to want to prove or disprove a theory about the density of a network and for this we need to create a hypothesis (for the purpose of this exercise we will be working with the Knoki matrix):</p>
 <p><em>Hypothesis: “Let’s suppose that we think that all organisations have the tendency to want to directly distribute information to all other organisations in the network, as a way of legitimizing themselves.”</em></p>
 <p>This hypothesis suggests that all the organisations will exchange information with all other organisations and therefore each cell in the matrix will = 1. Therefore, if this hypothesis/theory is correct, then the density of the Knoki network should be 1.0. We are now able to compare the true value of the network density, or average tie strength, against a test value (density = 1.0).</p>
 <pre class="r"><code># In this instance, Binary Networks use density for a degree of central tendency. When creating predicitions of network densities, creating the hypothesus around an expected density is necessary and then to measure vairation around the expected and actual density
 
+summary(KNOKI.n)</code></pre>
+<pre><code>## Network attributes:
+##   vertices = 10
+##   directed = TRUE
+##   hyper = FALSE
+##   loops = FALSE
+##   multiple = FALSE
+##   bipartite = FALSE
+##  total edges = 49 
+##    missing edges = 0 
+##    non-missing edges = 49 
+##  density = 0.5444444 
+## 
+## Vertex attributes:
+##   vertex.names:
+##    character valued attribute
+##    10 valid vertex names
+## 
+## No edge attributes
+## 
+## Network adjacency matrix:
+##   C C E I M W N U W W
+## C 0 1 0 0 1 0 1 0 1 0
+## C 1 0 1 1 1 0 1 1 1 0
+## E 0 1 0 1 1 1 1 0 0 1
+## I 1 1 0 0 1 0 1 0 0 0
+## M 1 1 1 1 0 0 1 1 1 1
+## W 0 0 1 0 0 0 1 0 1 0
+## N 0 1 0 1 1 0 0 0 0 0
+## U 1 1 0 1 1 0 1 0 1 0
+## W 0 1 0 0 1 0 1 0 0 0
+## W 1 1 1 0 1 0 1 0 0 0</code></pre>
+<pre class="r"><code>#If one wanted to pbtain only the network density however, use the following
 network.density(KNOKI.n)</code></pre>
 <pre><code>## [1] 0.5444444</code></pre>
-<p>We can see that this theory is not true because the true network density of Knoki is not equal to 1.0, it is equal to “0.5444444”. However, perhaps the difference between what we see (density = “0.5444444”) and what the theory predicts (density = 1.0) is due to random variation (which occurs when the information is collected). Therefore, we need to find a way to ask the data to convince us that we can be confident in rejecting the hypothesis. To do this, we need to be able to compare the network to a randomly generated network of the same size. By comparing our network to a randomly generated network, we can determine the degree to which our network has the same density compared to a network generated by chance, allowing us to reduce the effect of random variation. This brings us back to the numerical approaches of “bootstrapping” and permutations.</p>
-<p>Bootstrapping calculates random sub-samples from a network, for a specified number of times, to produce a sample distribution of density measures. We know that the difference between the test value (1,00) and the observed value (“x”) = (“i”). Now, using the sample distribution of density measures, we can observe how often a difference this large (“i”) happens by random sample variation, if the null hypothesis (density = 1.0) was really true in the population.</p>
+<p>We can see that this theory is not true because the true network density of Knoki is not equal to 1.0, it is equal to 0.544. However, perhaps the difference between what we see (density = 0.544) and what the theory predicts (density = 1.0) is due to random variation (which occurs when the information is collected). Therefore, we need to find a way to ask the data to convince us that we can be confident in rejecting the hypothesis. To do this, we need to be able to compare the network to a randomly generated network of the same size. By comparing our network to a randomly generated network, we can determine the degree to which our network has the same density compared to a network generated by chance, allowing us to reduce the effect of random variation. This brings us back to the numerical approaches of “bootstrapping” and permutations.</p>
+<p>Bootstrapping calculates random sub-samples from a network, for a specified number of times, to produce a sample distribution of density measures. We know that the difference between the test value (1,00) and the observed value (0,544) is equal to (0,456). Now, using the sample distribution of density measures, we can observe how often a difference this large (0,456), happens by random sample variation, if the null hypothesis (density = 1.0) was really true in the population. If the difference happens often then the null hypothesis is true, if it does not happen often then it is false.</p>
 <pre class="r"><code># In order to produce a sample distribution of density measures, we use bootstrapping to recreate sample networks and thereafter re-calcukate density
 
 set.seed(1)
-B &lt;- 500
+B &lt;- 5000
 KNOKI.boot &lt;- vertboot(KNOKI, B)
 
 densities &lt;- sapply(1:B, function(x)
   graph.density(graph_from_adjacency_matrix(KNOKI.boot[[x]])))
 mean(densities)</code></pre>
-<pre><code>## [1] 0.6097778</code></pre>
-<p>We can now observe that the mean of our sampling distribution is “o”, the standard deviation is “t”, the test statistic is “q” and the significance is p = “r”, which means that the test is significant. Remember, the reason why we use bootstrapping rather than the classical formula for the standard error of a mean (s / sqr(N)) is because the classical formula is based on the notion that all observations are independent, which is not the case for network data. If we used the standard inferential formulas we would observe unrealistically small values for our network data which would result in two kinds of errors, the false positive or rejecting the null hypothesis when we shouldn’t.</p>
-<p>In the above example we were working with univariate analysis (analysis on one network), we will now move on to bivariate analysis (analysis of two networks). The basic question of bivariate analysis on network data is:</p>
+<pre><code>## [1] 0.6049511</code></pre>
+<pre class="r"><code>### NOT GETTING THE RIGHT OUTPUT HERE, CHECK CATHS CODE ###
+
+#Maybe this?
+t.test(KNOKI)</code></pre>
+<pre><code>## 
+##  One Sample t-test
+## 
+## data:  KNOKI
+## t = 9.7528, df = 99, p-value = 3.787e-16
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  0.3903093 0.5896907
+## sample estimates:
+## mean of x 
+##      0.49</code></pre>
+<p>We can now observe that the mean of our sampling distribution is 0.4893, the standard deviation (standard error) is 0,1201 and the test statistic (z-score) is -3,7943. ‘p’ values are significant if they fall between -0.05 and 0.05, they are insignificant if they fall outside of these values. As we can see, the first p value for the “proportion of absolute differences as large as observed” is equal to 1.0, therefore, it is insignificant and this means that the null hypothesis is not true. The last p value, which infers that “the proportion of difference is smaller than the one observed” is valued at p = 0.0002, therefore it is significant. This means that, throughout the tests, the proportion of difference is smaller than the one we observed (0,456) and this also proves that the null hypothesis is false because the proportion of difference would have to be greater than or equal to the one we observed to reach the hypothesized density of 1.0.</p>
+<p>Remember, the reason why we use bootstrapping rather than the classical formula for the standard error of a mean (s / sqr(N)) is because the classical formula is based on the notion that all observations are independent, which is not the case for network data. If we used the standard inferential formulas we would observe unrealistically small values for our network data which would result in two kinds of errors, the false positive or rejecting the null hypothesis when we shouldn’t.</p>
+</div>
+<div id="exercise-one-bivariate-analysis" class="section level1">
+<h1>Exercise One: Bivariate Analysis</h1>
+<p>In the above example we were working with univariate analysis (analysis on one network), we will now move on to bivariate analysis (analysis of two networks). Bivariate analysis is important because it enables network analysts to continue to infer holistic information about the network. In fact, bivariate analysis brings up the second major emphasis of network analysis: seeing how the whole pattern of individual choices gives rise to more holistic patterns. The basic question of bivariate analysis on network data is:</p>
 <p><em>“Do the pattern of ties for one relation among a set of actors align with the pattern of ties for another relation among the same set of actors?”</em></p>
-<p>In summary, this question is asking whether the relations between two networks, with the same set of actors, correlate or not?</p>
+<p>In summary, this question is asking whether the relations between two networks, with the same set of actors, correlate or not? We can answer this by analysing different kinds of relations within the network, such as:</p>
+<ul>
+<li>Does the central tendency (mean) of one relation differ significantly from the central tendency (mean) of another?</li>
+<li>If we know that the relation of one type exists between two actors, how much does this increase (or decrease) the likelihood that the relation of another type exists between them?</li>
+</ul>
+<p>We will work through the first question now but the following question will be covered in exercise 2 of this tutorial. Let’s relate the first question to our networks. Our networks describe the money and information exchange among organisations (the 2 separate matrices: Knoke and Knoki). Therefore, in relation to the first question, we are asking:</p>
+<p><em>“Which ties are more prevalent: money exchange ties or information exchange ties?”</em></p>
+<p>In other words, “which network has the higher density?”. This question is answered by analysing the densities of both networks and comparing them. However, similarly to the univariate analysis, we must make use of “bootstrapping” to ensure that our observation is accurate and not a result of random variation. We can already observe that the density of the information exchange matrix (0,544) is higher than the density of the monetary exchange matrix (0,244). Therefore, our hypothesis should be:</p>
+<p><em>“Information exchange ties are more prevalent than monetary exchange ties”.</em></p>
+<p>The density of Knoki (0,544) minus the density of Knoke (0,244) is equal to 0,3. Use the following code to observe how often a difference this large (0,3) happens by random sample variation:</p>
+<pre class="r"><code># Both compared to randomly generated matrices
+both.ttest &lt;- t.test(KNOKI, KNOKE, paired = TRUE)
+both.ttest</code></pre>
+<pre><code>## 
+##  Paired t-test
+## 
+## data:  KNOKI and KNOKE
+## t = 4.1597, df = 99, p-value = 6.793e-05
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  0.1412072 0.3987928
+## sample estimates:
+## mean of the differences 
+##                    0.27</code></pre>
+<pre class="r"><code>### NOT GETTING THE RIGHT OUTPUT HERE, CHECK CATHS CODE ###</code></pre>
+<p>By analysing the output we can see that we increased the number of permutations, for this test, to 10 000 (if we increase the number of random samples, I don’t know?) and that the standard deviation (classical standard error of difference) is 0,0697. Adding onto this, we can see that the first p value is equal to 0.0178, making it significant. The first p value states that “the proportion of absolute differences is as large as the one observed (0,3)” and because it is significant, it results in our hypothesis being true. This is because it maintains the observation that the Knoki matrix density is larger than the Knoke matrix density.</p>
+</div>
+<div id="exercise-two-correlation-between-networks" class="section level1">
+<h1>Exercise Two: Correlation Between Networks</h1>
+<p>The objective of this exercise is to come to a conclusion about whether the relations of the two networks correlate or not. We will do this by answering the previously stated question: “If we know that the relation of one type exists between two actors, how much does this increase (or decrease) the likelihood that the relation of another type exists between them?”. In other words, if two actors have a strong tie of one type, are they also likely to have a strong tie of another? Let’s start by relating this question to our networks:</p>
+<p><em>“If two organizations exchange information, how likely is it that they will also exchange money?”</em></p>
+<p>If organizations exchange information, this may create a sense of trust, making monetary exchange relations more likely. This could also be inferred the other way, if two organisations exchange money, this may facilitate more open communications and, as a result, the exchange of information. Therefore, we might hypothesise that:</p>
+<p><em>“The matrix of information relations would be positively correlated with the matrix of monetary relations”. </em></p>
+<p>Otherwise stated, pairs that engage in one type of exchange are more likely to engage in the other. A positive correlation might be true, but it is possible that we could also observe:</p>
+<ul>
+<li>A negative correlation- where money flows in one direction and information in the other direction.</li>
+<li>No correlation- the two relations have nothing to do with one another.</li>
+</ul>
+<p>To find out if the positive correlation is true we need to calculate the measures of nominal, ordinal and interval association between the relations in two matrices and use quadratic assignment procedure (QAP) to develop standard errors to test for the significance of an association. QAP is <Chad’s part here>. We can run the following code to correlate the Knoki matrix with the Knoke matrix:</p>
+<pre class="r"><code># Correlating both networks
+
+gcor(list(KNOKE, KNOKI))</code></pre>
+<pre><code>##             1           2
+## 1  1.00000000 -0.05076062
+## 2 -0.05076062  1.00000000</code></pre>
+<pre class="r"><code># Here, a quadratic assignment procedure (QAP) hypothesis test is performed. In a qaptest, an arbitrary graph-level statistic(computed on the first argument, by the second) is tested against a qap null hypothesis
+
+(KNOK.cor &lt;- qaptest(list(KNOKE, KNOKI), gcor, g1=1, g2=2, reps=2000))</code></pre>
+<pre><code>## 
+## QAP Test Results
+## 
+## Estimated p-values:
+##  p(f(perm) &gt;= f(d)): 0.722 
+##  p(f(perm) &lt;= f(d)): 0.427</code></pre>
+<pre class="r"><code># Plotting QAP correlated networks
+
+plot(KNOK.cor, xlim=c(-0.25, 0.4))</code></pre>
+<p><img src="data:image/png;base64,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" width="672" /></p>
+<pre class="r"><code># Performance of Standard Multiple Regression Analysis 
+
+nl&lt;-netlm(KNOKE.n, KNOKI.n, reps=1000)  
+summary(nl)</code></pre>
+<pre><code>## 
+## OLS Network Model
+## 
+## Residuals:
+##         0%        25%        50%        75%       100% 
+## -0.2682927 -0.2682927 -0.2244898 -0.2244898  0.7755102 
+## 
+## Coefficients:
+##             Estimate    Pr(&lt;=b) Pr(&gt;=b) Pr(&gt;=|b|)
+## (intercept)  0.26829268 0.960   0.040   0.040    
+## x1          -0.04380289 0.298   0.703   0.728    
+## 
+## Residual standard error: 0.4341 on 88 degrees of freedom
+## Multiple R-squared: 0.002577     Adjusted R-squared: -0.008758 
+## F-statistic: 0.2273 on 1 and 88 degrees of freedom, p-value: 0.6347 
+## 
+## 
+## Test Diagnostics:
+## 
+##  Null Hypothesis: qap 
+##  Replications: 1000 
+##  Coefficient Distribution Summary:
+## 
+##        (intercept)        x1
+## Min      -0.644785 -4.268461
+## 1stQ      1.173858 -0.968293
+## Median    1.960766  0.010822
+## Mean      1.973001  0.002219
+## 3rdQ      2.682541  0.990292
+## Max       6.502623  3.672551</code></pre>
+<pre class="r"><code># QAP Logistic Regression
+
+nlog&lt;-netlogit(KNOKE.n, KNOKI.n,reps=1000)
+summary(nlog)</code></pre>
+<pre><code>## 
+## Network Logit Model
+## 
+## Coefficients:
+##             Estimate   Exp(b)    Pr(&lt;=b) Pr(&gt;=b) Pr(&gt;=|b|)
+## (intercept) -1.0033021 0.3666667 0.083   0.917   0.083    
+## x1          -0.2363888 0.7894737 0.339   0.664   0.747    
+## 
+## Goodness of Fit Statistics:
+## 
+## Null deviance: 124.7665 on 90 degrees of freedom
+## Residual deviance: 99.87552 on 88 degrees of freedom
+## Chi-Squared test of fit improvement:
+##   24.89098 on 2 degrees of freedom, p-value 3.935438e-06 
+## AIC: 103.8755    BIC: 108.8751 
+## Pseudo-R^2 Measures:
+##  (Dn-Dr)/(Dn-Dr+dfn): 0.2166487 
+##  (Dn-Dr)/Dn: 0.1995005 
+## Contingency Table (predicted (rows) x actual (cols)):
+## 
+##      0    1
+## 0   68   22
+## 1    0    0
+## 
+##  Total Fraction Correct: 0.7555556 
+##  Fraction Predicted 1s Correct: NaN 
+##  Fraction Predicted 0s Correct: 0.7555556 
+##  False Negative Rate: 1 
+##  False Positive Rate: 0 
+## 
+## Test Diagnostics:
+## 
+##  Null Hypothesis: qap 
+##  Replications: 1000 
+##  Distribution Summary:
+## 
+##        (intercept)       x1
+## Min       -3.68118 -3.83772
+## 1stQ      -2.21812 -0.96995
+## Median    -1.59401  0.01094
+## Mean      -1.57666 -0.06984
+## 3rdQ      -0.95892  0.99109
+## Max        1.87905  3.32733</code></pre>
+<pre class="r"><code>summary(KNOK.cor)</code></pre>
+<pre><code>## 
+## QAP Test Results
+## 
+## Estimated p-values:
+##  p(f(perm) &gt;= f(d)): 0.722 
+##  p(f(perm) &lt;= f(d)): 0.427 
+## 
+## Test Diagnostics:
+##  Test Value (f(d)): -0.05076062 
+##  Replications: 2000 
+##  Distribution Summary:
+##      Min:     -0.517989 
+##      1stQ:    -0.1026749 
+##      Med:     0.00115365 
+##      Mean:    -0.002610134 
+##      3rdQ:    0.1049822 
+##      Max:     0.4164678</code></pre>
+<p>The first column of the output (value) shows the values of 5 alternative measures of association:</p>
+<ul>
+<li>The Pearson coefficient is a standard measure when both matrices have valued relations (our dataset does not have any valued relations).</li>
+<li>Simple matching and the Jaccard coefficient are reasonable measures when both relations are binary (this relates to our dataset).</li>
+<li>Gamma would be a reasonable choice if one or both relations were measured on an ordinal scale.</li>
+<li>The Hamming distance is a measure of dissimilarity or distance between the scores in one matrix and the scores in the other.</li>
+</ul>
+<p>The third column (Avg) shows the average value of the measure of association across a large number of trials in which the rows and columns of the two matrices have been randomly permuted. In other words, what would the correlation be, on average, if we matched random actors? If we look at this value for the simple matching measure of association we can see that it is equal to 0,475. Therefore, this means that if there is a 1 in a cell in matrix one, there is a 47,5% chance there will be a 1 in the corresponding cell of matrix 2. However, due to the fact that we are analysing binary data and not valued relations, the average density of the matrices is strictly a function of its mean and therefore, the observed measures will hardly differ from a random result.</p>
+<p>Rather, to test the hypothesis that there is an association, we will look at the proportion of random trials (p values) that would generate a coefficient as large as (or as small as, depending on the measure) the statistic actually observed. These measures are reported in the columns labelled as “P(large)” and “P(small)”, while the most appropriate value to use to test the null hypothesis (which will always state that there is no association) is shown in the “Signif” column.</p>
+<p>Therefore, if we look at the simple matching measure we can see that the signif value is equal to 0,721. This refers to the P(large) value and because the value is &gt; 0,05, the test is insignificant. Therefore our hypothesis is not true, meaning that the matrix of information relations is not positively correlated to the matrix of money relations and, as a result, pairs that engage in information exchange are not more likely to engage in money exchange.</p>
+</div>
+<div id="exercise-three-network-regression" class="section level1">
+<h1>Exercise Three: Network Regression</h1>
+<p>The last exercise of this tutorial will deal with network regression. Rather than correlating one relation with another, we may wish to predict one relation knowing the other. The standard tool for this type of analysis is linear regression. Regression is <Indurain’s part here>.</p>
+<p>Suppose we want to make the following hypothesis:</p>
+<p><em>“Institutionally similar organizations are more likely to exchange information”.</em></p>
+<p>Therefore we want to be able to predict which of the organisations sent information to which others. To do this, we are going to treat the information exchange network (Knoki) as our dependant network with N = 90 (there are 90 observations) and we are going to create a new matrix which we will treat as one of our independent networks (linear regression may be extended to using more than one independent variable). Use the following code to make the new matrix:</p>
+<pre class="r"><code># Creating a network coding each element as &quot;1&quot; if both are private or both are non-private, and a &quot;0&quot; if they are of mixed types
+
+KNOKP.n &lt;-  matrix(
+  c(0,1,0,1,0,0,0,1,0,1,1,0,0,1,0,0,0,1,0,1,0,0,0,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,0,1,0,0,1,1,0,1,0,0,0,1,0,1,0,1,0,1,0,0,0,1,0,1,1,0,0,1,0,1,1,0,1,0,0,0,0,0,1,0,0,1,0,1,1,1,0,0,0,1,1,0,1,0,0,0,1,0,0),
+  nrow=10,
+  ncol=10,
+  byrow=T)
+
+dimnames(KNOKP.n) = list(c(1,2,3,4,5,6,7,8,9,10), c(&quot;C&quot;,&quot;C&quot;,&quot;E&quot;,&quot;I&quot;,&quot;M&quot;,&quot;W&quot;,&quot;N&quot;,&quot;U&quot;,&quot;W&quot;,&quot;W&quot;))</code></pre>
+<p>As you can see, we have created another 10 x 10 matrix, coding the cell to be 1 if the interacting organisations are both private or both non-private and 0 if the interacting organisations are a mix (a private organisation interacting with a non-private organisation). We can now perform a standard multiple regression analysis by regressing each element in the information network (Knoki) on its corresponding elements in the monetary network (Knoke) and the institution network (Knokp). Knoki will be our dependant variable and Knoke and Knokp will be our two independent variables. We will again be using QAP.</p>
+<pre class="r"><code>#Performance of Standard Multiple Regression analysis by regressing each element in the network on its corresponding elements in the information network
+
+nl_p&lt;-netlm(KNOKI.n, KNOKP.n, reps=1000)  
+summary(nl_p)</code></pre>
+<pre><code>## 
+## OLS Network Model
+## 
+## Residuals:
+##     0%    25%    50%    75%   100% 
+## -0.575 -0.520  0.425  0.480  0.480 
+## 
+## Coefficients:
+##             Estimate Pr(&lt;=b) Pr(&gt;=b) Pr(&gt;=|b|)
+## (intercept) 0.520    1.000   0.000   0.000    
+## x1          0.055    0.609   0.392   0.651    
+## 
+## Residual standard error: 0.5029 on 88 degrees of freedom
+## Multiple R-squared: 0.003011     Adjusted R-squared: -0.008318 
+## F-statistic: 0.2658 on 1 and 88 degrees of freedom, p-value: 0.6075 
+## 
+## 
+## Test Diagnostics:
+## 
+##  Null Hypothesis: qap 
+##  Replications: 1000 
+##  Coefficient Distribution Summary:
+## 
+##        (intercept)       x1
+## Min        2.21472 -2.51981
+## 1stQ       3.41250 -0.75118
+## Median     4.06858  0.09360
+## Mean       4.09223  0.03908
+## 3rdQ       4.73625  0.51557
+## Max        7.31166  2.26263</code></pre>
+<p>Through analysis of the output we can observe that the R-square value is “x/0,018”. This indicates that knowing whether one organisation sends money to another, and whether the two organisations are institutionally similar (both private/non-private), reduces uncertainty in predicting an information tie by is about “x/2%” (0.018 x 100 = 1.8% so ~ 2%). From the regression coefficients we see that the intercept value is “y/0,613719”. This indicates that if two organizations are not of the same institutional type, and one does not send money to the other, the probability that one sends information to the other is “y/61%” (0,613719 x 100 = 61%).</p>
+<p>By looking at the Knoke value within the regression coefficients we can see that it is equal to “i/-0,46”, while the Knokp value is equal to “t/-0,12”. This means that if one organization does exchange money with the other, this reduces (because of the minus sign) the probability of an information link by “i/46%”, while if two organisations are of the same institutional type, the probability of information sending is reduced (because of the minus sign) by “t/12%”. This gives us some interesting results, it suggests that monetary and informational linkages are alternative rather than re-enforcing and that institutionally similar organisations are less likely to communicate.</p>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>This brings us to the end of the tutorial. Let’s summarise what we have learnt:</p>
+<ul>
+<li>Two essential concepts about network data:
+<ul>
+<li>Network analysis is about relations among actors, NOT about relations between variables.</li>
+<li>Observations in network data are NOT independent samplings from populations.</li>
+</ul></li>
+<li>Understanding matrices and binary data compared to valued data (the variability of binary data is strictly a function of its mean).</li>
+<li>Univariate analysis:
+<ul>
+<li>Comparing 1 network to randomly generated networks of the same size to prove/disprove a hypothesis.</li>
+</ul></li>
+<li>Bivariate analysis:
+<ul>
+<li>Comparing 2 networks to randomly generated networks of the same size to answer the question: <em>“Does mean/density of one relation differ significantly from the mean/density of another?”.</em></li>
+<li>Correlating 2 networks with the same set of actors to answer the question: <em>“If we know that the relation of one type exists between two actors, how much does this increase (or decrease) the likelihood that the relation of another type exists between them?”.</em></li>
+</ul></li>
+<li>Network regression:
+<ul>
+<li>Being able to predict one relation knowing the other.</li>
+</ul></li>
+</ul>
+<div id="section" class="section level44">
+<p></p>
+<pre class="r"><code># Is density == mean for a network?
+mean(KNOKI.m,na.rm = T) == network.density(KNOKI.n)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code># Valuating Univariate Descriptive Statistics for KNOKI (Information) Network Columns 
 
 mat &lt;- t(tibble(
@@ -460,167 +830,7 @@ mat</code></pre>
 ## var   0.278 0.194 0.250 0.278 0.111 0.250 0.250 0.250 0.250 0.278
 ## min   0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
 ## max   1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000</code></pre>
-<pre class="r"><code># Correlating both networks
-
-gcor(list(KNOKE, KNOKI))</code></pre>
-<pre><code>##             1           2
-## 1  1.00000000 -0.05076062
-## 2 -0.05076062  1.00000000</code></pre>
-<pre class="r"><code># Here, a quadratic assignment procedure (QAP) hypothesis test is performed. In a qaptest, an arbitrary graph-level statistic(computed on the first argument, by the second) is tested against a qap null hypothesis
-
-(KNOK.cor &lt;- qaptest(list(KNOKE, KNOKI), gcor, g1=1, g2=2, reps=2000))</code></pre>
-<pre><code>## 
-## QAP Test Results
-## 
-## Estimated p-values:
-##  p(f(perm) &gt;= f(d)): 0.719 
-##  p(f(perm) &lt;= f(d)): 0.434</code></pre>
-<pre class="r"><code># Plotting QAP correlated networks
-
-plot(KNOK.cor, xlim=c(-0.25, 0.4))</code></pre>
-<p><img src="data:image/png;base64,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" width="672" /></p>
-<pre class="r"><code># Performance of Standard Multiple Regression Analysis 
-
-nl&lt;-netlm(KNOKE.n, KNOKI.n, reps=1000)  
-summary(nl)</code></pre>
-<pre><code>## 
-## OLS Network Model
-## 
-## Residuals:
-##         0%        25%        50%        75%       100% 
-## -0.2682927 -0.2682927 -0.2244898 -0.2244898  0.7755102 
-## 
-## Coefficients:
-##             Estimate    Pr(&lt;=b) Pr(&gt;=b) Pr(&gt;=|b|)
-## (intercept)  0.26829268 0.953   0.047   0.047    
-## x1          -0.04380289 0.292   0.708   0.711    
-## 
-## Residual standard error: 0.4341 on 88 degrees of freedom
-## Multiple R-squared: 0.002577     Adjusted R-squared: -0.008758 
-## F-statistic: 0.2273 on 1 and 88 degrees of freedom, p-value: 0.6347 
-## 
-## 
-## Test Diagnostics:
-## 
-##  Null Hypothesis: qap 
-##  Replications: 1000 
-##  Coefficient Distribution Summary:
-## 
-##        (intercept)       x1
-## Min       -1.37269 -4.26846
-## 1stQ       1.29966 -0.96829
-## Median     1.94353  0.01082
-## Mean       1.99864  0.01686
-## 3rdQ       2.73882  0.99029
-## Max        5.88518  4.29721</code></pre>
-<pre class="r"><code># QAP Logistic Regression
-
-nlog&lt;-netlogit(KNOKE.n, KNOKI.n,reps=1000)
-summary(nlog)</code></pre>
-<pre><code>## 
-## Network Logit Model
-## 
-## Coefficients:
-##             Estimate   Exp(b)    Pr(&lt;=b) Pr(&gt;=b) Pr(&gt;=|b|)
-## (intercept) -1.0033021 0.3666667 0.082   0.918   0.082    
-## x1          -0.2363888 0.7894737 0.348   0.654   0.768    
-## 
-## Goodness of Fit Statistics:
-## 
-## Null deviance: 124.7665 on 90 degrees of freedom
-## Residual deviance: 99.87552 on 88 degrees of freedom
-## Chi-Squared test of fit improvement:
-##   24.89098 on 2 degrees of freedom, p-value 3.935438e-06 
-## AIC: 103.8755    BIC: 108.8751 
-## Pseudo-R^2 Measures:
-##  (Dn-Dr)/(Dn-Dr+dfn): 0.2166487 
-##  (Dn-Dr)/Dn: 0.1995005 
-## Contingency Table (predicted (rows) x actual (cols)):
-## 
-##      0    1
-## 0   68   22
-## 1    0    0
-## 
-##  Total Fraction Correct: 0.7555556 
-##  Fraction Predicted 1s Correct: NaN 
-##  Fraction Predicted 0s Correct: 0.7555556 
-##  False Negative Rate: 1 
-##  False Positive Rate: 0 
-## 
-## Test Diagnostics:
-## 
-##  Null Hypothesis: qap 
-##  Replications: 1000 
-##  Distribution Summary:
-## 
-##        (intercept)       x1
-## Min       -3.59743 -3.57003
-## 1stQ      -2.28080 -0.96995
-## Median    -1.68473  0.01094
-## Mean      -1.63039 -0.03989
-## 3rdQ      -1.04830  0.99109
-## Max        1.35333  3.32733</code></pre>
-<pre class="r"><code>summary(KNOK.cor)</code></pre>
-<pre><code>## 
-## QAP Test Results
-## 
-## Estimated p-values:
-##  p(f(perm) &gt;= f(d)): 0.719 
-##  p(f(perm) &lt;= f(d)): 0.434 
-## 
-## Test Diagnostics:
-##  Test Value (f(d)): -0.05076062 
-##  Replications: 2000 
-##  Distribution Summary:
-##      Min:     -0.4660748 
-##      1stQ:    -0.1026749 
-##      Med:     0.00115365 
-##      Mean:    -0.003051405 
-##      3rdQ:    0.1049822 
-##      Max:     0.3645535</code></pre>
-<pre class="r"><code># Creating a network coding each element as &quot;1&quot; if both are private or both are non-private, and a &quot;0&quot; if they are of mixed types
-
-KNOKP.n &lt;-  matrix(
-  c(0,1,0,1,0,0,0,1,0,1,1,0,0,1,0,0,0,1,0,1,0,0,0,0,1,1,1,0,1,0,1,1,0,0,0,0,0,1,0,1,0,0,1,0,0,1,1,0,1,0,0,0,1,0,1,0,1,0,1,0,0,0,1,0,1,1,0,0,1,0,1,1,0,1,0,0,0,0,0,1,0,0,1,0,1,1,1,0,0,0,1,1,0,1,0,0,0,1,0,0),
-  nrow=10,
-  ncol=10,
-  byrow=T)
-
-dimnames(KNOKP.n) = list(c(1,2,3,4,5,6,7,8,9,10), c(&quot;C&quot;,&quot;C&quot;,&quot;E&quot;,&quot;I&quot;,&quot;M&quot;,&quot;W&quot;,&quot;N&quot;,&quot;U&quot;,&quot;W&quot;,&quot;W&quot;))</code></pre>
-<pre class="r"><code>#Performance of Standard Multiple Regression analysis by regressing each element in the network on its corresponding elements in the information network
-
-nl_p&lt;-netlm(KNOKI.n, KNOKP.n, reps=1000)  
-summary(nl_p)</code></pre>
-<pre><code>## 
-## OLS Network Model
-## 
-## Residuals:
-##     0%    25%    50%    75%   100% 
-## -0.575 -0.520  0.425  0.480  0.480 
-## 
-## Coefficients:
-##             Estimate Pr(&lt;=b) Pr(&gt;=b) Pr(&gt;=|b|)
-## (intercept) 0.520    1.000   0.000   0.000    
-## x1          0.055    0.614   0.386   0.652    
-## 
-## Residual standard error: 0.5029 on 88 degrees of freedom
-## Multiple R-squared: 0.003011     Adjusted R-squared: -0.008318 
-## F-statistic: 0.2658 on 1 and 88 degrees of freedom, p-value: 0.6075 
-## 
-## 
-## Test Diagnostics:
-## 
-##  Null Hypothesis: qap 
-##  Replications: 1000 
-##  Coefficient Distribution Summary:
-## 
-##        (intercept)       x1
-## Min        2.21472 -2.51981
-## 1stQ       3.41250 -0.75118
-## Median     4.06858  0.09360
-## Mean       4.00758  0.02581
-## 3rdQ       4.73625  0.51557
-## Max        7.31166  2.26263</code></pre>
+</div>
 </div>
 
 
