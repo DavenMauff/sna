@@ -244,22 +244,15 @@ Bootstrapping calculates random sub-samples from a network, for a specified numb
 ```{r}
 # In order to produce a sample distribution of density measures, we use bootstrapping to recreate sample networks and thereafter re-calcukate density
 
-set.seed(1)
-B <- 5000
-KNOKI.boot <- vertboot(KNOKI, B)
-
-densities <- sapply(1:B, function(x)
-  graph.density(graph_from_adjacency_matrix(KNOKI.boot[[x]])))
-mean(densities)
-
-### NOT GETTING THE RIGHT OUTPUT HERE, CHECK CATHS CODE ###
-
-#Maybe this?
 t.test(KNOKI)
+
 ```
 
+<----- this section may need to be removed, most of vals cath mentions arent included in the output ------>
 
-We can now observe that the mean of our sampling distribution is 0.4893, the standard deviation (standard error) is  0,1201 and the test statistic (z-score) is -3,7943. ‘p’ values are significant if they fall between -0.05 and 0.05, they are insignificant if they fall outside of these values. As we can see, the first p value for the “proportion of absolute differences as large as observed” is equal to 1.0, therefore, it is insignificant and this means that the null hypothesis is not true. The last p value, which infers that “the proportion of difference is smaller than the one observed” is valued at p = 0.0002, therefore it is significant. This means that, throughout the tests, the proportion of difference is smaller than the one we observed (0,456) and this also proves that the null hypothesis is false because the proportion of difference would have to be greater than or equal to the one we observed to reach the hypothesized density of 1.0. 
+We can now observe that the mean of our sampling distribution is 0.49, the standard deviation (standard error) is  0,1201 and the test statistic (z-score) is -3,7943. ‘p’ values are significant if they fall between -0.05 and 0.05, they are insignificant if they fall outside of these values. As we can see, the first p value for the “proportion of absolute differences as large as observed” is equal to 1.0, therefore, it is insignificant and this means that the null hypothesis is not true. The last p value, which infers that “the proportion of difference is smaller than the one observed” is valued at p = 0.0002, therefore it is significant. This means that, throughout the tests, the proportion of difference is smaller than the one we observed (0,456) and this also proves that the null hypothesis is false because the proportion of difference would have to be greater than or equal to the one we observed to reach the hypothesized density of 1.0. 
+
+<-------------->
 
 
 Remember, the reason why we use bootstrapping rather than the classical formula for the standard error of a mean (s / sqr(N)) is because the classical formula is based on the notion that all observations are independent, which is not the case for network data. If we used the standard inferential formulas we would observe unrealistically small values for our network data which would result in two kinds of errors, the false positive or rejecting the null hypothesis when we shouldn’t. 
@@ -297,15 +290,19 @@ The density of Knoki (0,544) minus the density of Knoke (0,244) is equal to 0,3.
 
 
 ```{r}
+
 # Both compared to randomly generated matrices
 both.ttest <- t.test(KNOKI, KNOKE, paired = TRUE)
 both.ttest
 
-### NOT GETTING THE RIGHT OUTPUT HERE, CHECK CATHS CODE ###
 ```
 
 
-By analysing the output we can see that we increased the number of permutations, for this test, to 10 000 (if we increase the number of random samples, I don’t know?) and that the standard deviation (classical standard error of difference) is 0,0697. Adding onto this, we can see that the first p value is equal to 0.0178, making it significant. The first p value states that “the proportion of absolute differences is as large as the one observed (0,3)” and because it is significant, it results in our hypothesis being true. This is because it maintains the observation that the Knoki matrix density is larger than the Knoke matrix density. 
+<----- Once again, some of the values match, most dont, might need to remove ------>
+
+By analysing the output we can see that the standard deviation (classical standard error of difference) is 0,0697. Adding onto this, we can see that the first p value is equal to 0.0178, making it significant. The first p value states that “the proportion of absolute differences is as large as the one observed (0,3)” and because it is significant, it results in our hypothesis being true. This is because it maintains the observation that the Knoki matrix density is larger than the Knoke matrix density. 
+
+<--------------->
 
 
 # Exercise Two: Correlation Between Networks
@@ -330,15 +327,20 @@ Otherwise stated, pairs that engage in one type of exchange are more likely to e
 * No correlation- the two relations have nothing to do with one another. 
 
 
-To find out if the positive correlation is true we need to calculate the measures of nominal, ordinal and interval association between the relations in two matrices and use quadratic assignment procedure (QAP) to develop standard errors to test for the significance of an association. QAP is <Chad’s part here>. We can run the following code to correlate the Knoki matrix with the Knoke matrix:
+To find out if the positive correlation is true we need to calculate the measures of nominal, ordinal and interval association between the relations in two matrices and use quadratic assignment procedure (QAP) to develop standard errors to test for the significance of an association. 
+
+QAP, found in Statnet library, is a permutation test that identifies and measures the association between two relations. Essentially, QAP shuffles the dependent variable /actor data, in our case the KNOK matrices, through several permutations and then compares these coefficients with the sampling distribution of coefficients from the permuted matrices. QAP controls for network structure through these permutation. The QAP estimates standard errors for R-squared, regression coefficients and p-values, which are the proportion of time the null coefficient is smaller or equal to the observed estimate. A small drawback to performing QAP is that it is not scalable, as the iteration increases so does the memory and network size, this inevitably delays overall performance.
+To perform QAP the matrices must be square with the same number of rows as columns (e.g. 10x10), the matrices must be the same size and number of nodes and only one relationship between nodes can be measured.
 
 
+We can run the following code to correlate the Knoki matrix with the Knoke matrix:
 
 
 ```{r Correlating Networks}
 # Correlating both networks
 
-gcor(list(KNOKE, KNOKI))
+output.gcor <- gcor(list(KNOKE, KNOKI))
+output.gcor
 ```
 
 ```{r QAP test}
@@ -353,24 +355,18 @@ gcor(list(KNOKE, KNOKI))
 plot(KNOK.cor, xlim=c(-0.25, 0.4))
 ```
 
-```{r QAP Linear Regression}
-# Performance of Standard Multiple Regression Analysis 
 
-nl<-netlm(KNOKE.n, KNOKI.n, reps=1000)  
-summary(nl)
-```
+```{r}
 
-```{r QAP Logistic Regression}
-# QAP Logistic Regression
-
-nlog<-netlogit(KNOKE.n, KNOKI.n,reps=1000)
-summary(nlog)
-```
-
-```{r Better View}
+# A better view of the results
 summary(KNOK.cor)
+
 ```
 
+The QAP Correlation analysis test, tests if a statistically significant association between given actors exists, in our case two Knok network matrices representing money and information. The Pearson correlation is a standard measure for matrices which have valued relations measured at interval levels. Our QAP correlation analysis is performed using the GCOR function measuring levels of linear relationships ranging from -1 to 1. To interpret this output, a second step has to be performed where the rows and columns of the dependent matrices has to be randomly and repeatedly permuted. For our tutorial our matrices were permuted 2000 times. This creates distribution of correlations namely, p>= (0.74), which is the probability that the correlation between the two networks are smaller or equal to the random graph/ matrix, and for p<= (0.4295), which is the probability that the correlation between the two networks are bigger than or equal to the random graph/ matrix. The distribution of correlation values also range from -1 to 1, the closer to 0 the value is the more significant the value is. These p-values are then compared to the initial Pearson correlation value of -0.0508 to determine whether there is a strong correlation or not. The QAP correlation is deemed significant if the Pearson correlation is greater than at least 95% of the distribution correlations (p-values). Stated differently, if less than 5% of the random correlations are larger than the Pearson correlation value then the QAP correlation suggests a significant correlation.
+
+
+<------ I actually think this entire section can be removed, too in depth, plus chad's part already interpretted the values (above) ------>
 
 The first column of the output (value) shows the values of 5 alternative measures of association:
 
@@ -388,6 +384,8 @@ Rather, to test the hypothesis that there is an association,  we will look at th
 
 
 Therefore, if we look at the simple matching measure we can see that the signif value is equal to 0,721. This refers to the P(large) value and because the value is > 0,05, the test is insignificant. Therefore our hypothesis is not true, meaning that the matrix of information relations is not positively correlated to the matrix of money relations and, as a result, pairs that engage in information exchange are not more likely to engage in money exchange. 
+
+<---------->
 
 
 # Exercise Three: Network Regression
@@ -431,11 +429,14 @@ summary(nl_p)
 ```
 
 
-Through analysis of the output we can observe that the R-square value is “x/0,018”. This indicates that knowing whether one organisation sends money to another, and whether the two organisations are institutionally similar (both private/non-private), reduces uncertainty in predicting an information tie by is about “x/2%” (0.018 x 100 = 1.8% so ~ 2%). From the regression coefficients we see that the intercept value is  “y/0,613719”. This indicates that if two organizations are not of the same institutional type, and one does not send money to the other, the probability that one sends information to the other is “y/61%” (0,613719 x 100 = 61%). 
+Through analysis of the output we can observe that the R-square value is  -0,018. This indicates that knowing whether one organisation sends money to another, and whether the two organisations are institutionally similar (both private/non-private), reduces uncertainty in predicting an information tie by is about -2% (-0.018 x 100 = 1.8% so ~ -2%). From the regression coefficients we see that the intercept value is  0,534951. This indicates that if two organizations are not of the same institutional type, and one does not send money to the other, the probability that one sends information to the other is 53% (0,534951 x 100 = 53%). 
 
+
+<------ Cant make sense of these values, can't vals in our output that match these even remotely ------>
 
 By looking at the Knoke value within the regression coefficients we can see that it is equal to “i/-0,46”, while the Knokp value is equal to “t/-0,12”. This means that if one organization does exchange money with the other, this reduces (because of the minus sign) the probability of an information link by “i/46%”, while if two organisations are of the same institutional type, the probability of information sending is reduced (because of the minus sign) by “t/12%”. This gives us some interesting results, it suggests that monetary and informational linkages are alternative rather than re-enforcing and that institutionally similar organisations are less likely to communicate. 
 
+<------------->
 
 # Conclusion
 
@@ -493,5 +494,32 @@ max = round(apply(KNOKI.m, 1, max, na.rm = T),3)
 )) %>% data.frame()
 colnames(mat) <- colnames(KNOKI.m)
 mat
+```
+
+```{r}
+
+#One method to find just the density
+set.seed(1)
+B <- 5000
+KNOKI.boot <- vertboot(KNOKI, B)
+
+densities <- sapply(1:B, function(x)
+  graph.density(graph_from_adjacency_matrix(KNOKI.boot[[x]])))
+mean(densities)
+
+```
+
+```{r QAP Linear Regression}
+# Performance of Standard Multiple Regression Analysis 
+
+nl<-netlm(KNOKE.n, KNOKI.n, reps=1000)  
+summary(nl)
+```
+
+```{r QAP Logistic Regression}
+# QAP Logistic Regression
+
+nlog<-netlogit(KNOKE.n, KNOKI.n,reps=1000)
+summary(nlog)
 ```
 
